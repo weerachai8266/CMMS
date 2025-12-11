@@ -1,0 +1,161 @@
+<?php
+require_once '../config/config.php';
+require_once '../config/db.php';
+
+header('Content-Type: application/json; charset=utf-8');
+
+$action = $_POST['action'] ?? $_GET['action'] ?? '';
+$type = $_POST['type'] ?? $_GET['type'] ?? ''; // company, branch, division, department
+
+try {
+    switch ($action) {
+        case 'list':
+            listItems($conn, $type);
+            break;
+        case 'get':
+            getItem($conn, $type, $_GET['id'] ?? 0);
+            break;
+        case 'save':
+            saveItem($conn, $type);
+            break;
+        case 'delete':
+            deleteItem($conn, $type, $_POST['id'] ?? 0);
+            break;
+        case 'toggle_status':
+            toggleStatus($conn, $type, $_POST['id'] ?? 0);
+            break;
+        default:
+            json_response(false, 'Invalid action');
+    }
+} catch (Exception $e) {
+    http_response_code(500);
+    json_response(false, 'เกิดข้อผิดพลาด: ' . $e->getMessage());
+}
+
+function getTableName($type) {
+    $tables = [
+        'company' => 'mt_companies',
+        'branch' => 'mt_branches',
+        'division' => 'mt_divisions',
+        'department' => 'mt_departments',
+        'issue' => 'mt_issues'
+    ];
+    return $tables[$type] ?? null;
+}
+
+function listItems($conn, $type) {
+    $table = getTableName($type);
+    if (!$table) {
+        json_response(false, 'Invalid type');
+        return;
+    }
+    
+    $sql = "SELECT id, name, is_active, created_at FROM $table ORDER BY created_at DESC";
+    
+    $stmt = $conn->prepare($sql);
+    $stmt->execute();
+    $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    json_response(true, 'ดึงข้อมูลสำเร็จ', $data);
+}
+
+function getItem($conn, $type, $id) {
+    $table = getTableName($type);
+    if (!$table || !$id) {
+        json_response(false, 'Invalid parameters');
+        return;
+    }
+    
+    $stmt = $conn->prepare("SELECT * FROM $table WHERE id = :id");
+    $stmt->execute([':id' => $id]);
+    $data = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    if ($data) {
+        json_response(true, 'ดึงข้อมูลสำเร็จ', $data);
+    } else {
+        json_response(false, 'ไม่พบข้อมูล');
+    }
+}
+
+function saveItem($conn, $type) {
+    $table = getTableName($type);
+    if (!$table) {
+        json_response(false, 'Invalid type');
+        return;
+    }
+    
+    $id = $_POST['id'] ?? 0;
+    $name = trim($_POST['name'] ?? '');
+    
+    if (empty($name)) {
+        json_response(false, 'กรุณากรอกชื่อ');
+        return;
+    }
+    
+    try {
+        $conn->beginTransaction();
+        
+        if ($id > 0) {
+            // Update
+            $sql = "UPDATE $table SET name = :name WHERE id = :id";
+            $params = [':id' => $id, ':name' => $name];
+            
+            $stmt = $conn->prepare($sql);
+            $stmt->execute($params);
+            
+            $conn->commit();
+            json_response(true, 'อัปเดตข้อมูลสำเร็จ');
+            
+        } else {
+            // Insert
+            $sql = "INSERT INTO $table (name) VALUES (:name)";
+            $params = [':name' => $name];
+            
+            $stmt = $conn->prepare($sql);
+            $stmt->execute($params);
+            
+            $conn->commit();
+            json_response(true, 'เพิ่มข้อมูลสำเร็จ', ['id' => $conn->lastInsertId()]);
+        }
+        
+    } catch (PDOException $e) {
+        $conn->rollBack();
+        json_response(false, 'เกิดข้อผิดพลาด: ' . $e->getMessage());
+    }
+}
+
+function deleteItem($conn, $type, $id) {
+    $table = getTableName($type);
+    if (!$table || !$id) {
+        json_response(false, 'Invalid parameters');
+        return;
+    }
+    
+    try {
+        $stmt = $conn->prepare("DELETE FROM $table WHERE id = :id");
+        $stmt->execute([':id' => $id]);
+        
+        json_response(true, 'ลบข้อมูลสำเร็จ');
+    } catch (PDOException $e) {
+        if ($e->getCode() == 23000) {
+            json_response(false, 'ไม่สามารถลบได้ เนื่องจากมีข้อมูลที่เกี่ยวข้อง');
+        } else {
+            json_response(false, 'เกิดข้อผิดพลาด: ' . $e->getMessage());
+        }
+    }
+}
+
+function toggleStatus($conn, $type, $id) {
+    $table = getTableName($type);
+    if (!$table || !$id) {
+        json_response(false, 'Invalid parameters');
+        return;
+    }
+    
+    $sql = "UPDATE $table SET is_active = 1 - is_active WHERE id = :id";
+    $stmt = $conn->prepare($sql);
+    $stmt->execute([':id' => $id]);
+    
+    json_response(true, 'เปลี่ยนสถานะสำเร็จ');
+}
+?>

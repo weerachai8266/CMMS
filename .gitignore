@@ -1,0 +1,66 @@
+# ========================================
+# .gitignore สำหรับ MT Repair System
+# ========================================
+
+# Configuration Files (ห้าม commit ข้อมูล sensitive)
+config/db.php
+
+# Test Files
+test_connection.php
+test.php
+debug.php
+
+# IDE & Editor Files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+.DS_Store
+Thumbs.db
+
+# Log Files
+*.log
+logs/
+error_log
+
+# Temporary Files
+*.tmp
+*.temp
+*.cache
+*.swp
+*.swo
+*~
+
+# Upload Files (ถ้ามีระบบอัพโหลดไฟล์)
+uploads/
+upload/
+tmp/
+
+# Backup Files
+*.bak
+*.backup
+*.old
+backup/
+
+# Node Modules (ถ้ามีใช้ Node.js)
+node_modules/
+package-lock.json
+
+# Composer (ถ้ามีใช้ Composer)
+vendor/
+composer.lock
+
+# OS Generated Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Database Dumps
+*.sql.gz
+*.sql.zip
+dump.sql
+backup.sql

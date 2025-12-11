@@ -1,0 +1,333 @@
+/* CSS สำหรับพิมพ์ใบแจ้งซ่อม */
+
+@page {
+    size: A4;
+    margin: 2mm;
+}
+
+body {
+    font-family: 'Sarabun', 'TH SarabunPSK', sans-serif;
+    font-size: 10pt;
+    line-height: 1.4;
+    color: #000;
+    background: #fff;
+}
+
+.print-container {
+    width: 100%;
+    max-width: 210mm;
+    margin: 0 auto;
+    /* padding: 2mm; */
+    /* border: 2px solid #000; */
+}
+
+/* Header */
+.form-header {
+    text-align: center;
+    margin-bottom: 2mm;
+    position: relative;
+}
+
+.company-logo {
+    position: absolute;
+    left: 15px;
+    top: 10px;
+    width: 60px;
+    height: 60px;
+}
+
+.form-header h2 {
+    margin-top: 8px;
+    margin-bottom: 0px;
+    font-size: 16pt;
+    font-weight: bold;
+    
+}
+
+.form-header h3 {
+    margin: 2px 0;
+    font-size: 14pt;
+    font-weight: normal;
+}
+
+.form-header p {
+    margin: 2px 0;
+    font-size: 12pt;
+}
+
+/* Top info */
+.top-info {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 2px;
+    font-size: 12pt;
+}
+
+/* Section */
+.form-section {
+    border: 1px solid #000;
+    margin-bottom: 2px;
+    min-height: 80px;
+}
+
+.section-header {
+    /* background: #f0f0f0; */
+    padding: 3px 8px;
+    font-weight: bold;
+    /* border-top: 1px solid #000; */
+    /* border-bottom: 1px solid #000; */
+}
+
+.section-content {
+    padding: 8px;
+}
+
+/* Two columns layout */
+.two-columns {
+    display: flex;
+}
+
+.column-left {
+    width: 50%;
+    border-right: 1px solid #000;
+    /* padding: 4px; */
+}
+
+.column-right {
+    width: 50%;
+    /* padding: 4px; */
+}
+
+/* Form fields */
+.form-field {
+    margin-bottom: 4px;
+    line-height: 1.4;
+}
+
+.form-field label {
+    font-weight: normal;
+}
+
+.form-field .value {
+    display: inline-block;
+    border-bottom: 1px dotted #333;
+    min-width: 200px;
+    padding: 0 5px;
+}
+
+.checkbox-group {
+    margin: 2px 0;
+}
+
+.checkbox-item {
+    display: inline-block;
+    margin-right: 20px;
+}
+
+.checkbox-item input[type="checkbox"] {
+    width: 15px;
+    height: 15px;
+    border: 1px solid #000;
+    vertical-align: middle;
+    margin-right: 5px;
+}
+
+/* Text areas */
+.text-area {
+    width: 100%;
+    min-height: 10px;
+    border: none;
+    resize: none;
+    font-family: inherit;
+    font-size: 12pt;
+    line-height: 1.8;
+    height: auto;
+    color: #0056b3;
+    background-image: repeating-linear-gradient(
+        transparent,
+        transparent calc(1.8em - 1px),
+        #999 calc(1.8em - 1px),
+        #999 1.8em
+    );
+    background-attachment: local;
+    padding: 0;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+}
+
+/* Signature section */
+.signature-row {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 5px;
+    padding: 5px 0;
+}
+
+.signature-box {
+    text-align: left;
+    min-width: 150px;
+    height: 60px;
+}
+
+.signature-line {
+    border-bottom: 1px dotted #333;
+    min-width: 150px;
+    height: 40px;
+    margin-bottom: 5px;
+}
+
+/* Hide on screen, show on print */
+@media screen {
+    .print-container {
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        margin: 20px auto;
+    }
+    
+    .no-print {
+        text-align: center;
+        margin: 20px;
+    }
+    
+    .print-btn {
+        background: #007bff;
+        color: white;
+        border: none;
+        padding: 12px 30px;
+        font-size: 16px;
+        border-radius: 5px;
+        cursor: pointer;
+        margin: 0 5px;
+    }
+    
+    .print-btn:hover {
+        background: #0056b3;
+    }
+    
+    .close-btn {
+        background: #6c757d;
+    }
+    
+    .close-btn:hover {
+        background: #5a6268;
+    }
+}
+
+@media print {
+    body {
+        margin: 0;
+        padding: 0;
+    }
+    
+    .print-container {
+        /* border: 2px solid #000; */
+        box-shadow: none;
+        margin: 0;
+        padding: 5mm;
+    }
+    
+    .no-print {
+        display: none !important;
+    }
+    
+    .form-section {
+        break-inside: avoid;
+    }
+}
+
+/* Red text for required fields in template */
+.red-text {
+    color: #ff0000;
+    font-size: 11pt;
+}
+
+/* Small text */
+.small-text {
+    font-size: 11pt;
+}
+
+/* Editable underline field */
+.underline-field {
+    border-bottom: 1px solid #999;
+    display: inline-block;
+    padding: 0 5px;
+    color: #0056b3;
+    font-weight: 600;
+    min-width: 100px;
+}
+
+/* Readonly checkbox - ไม่ให้เป็นสีเทา */
+.readonly-checkbox {
+    cursor: default !important;
+    pointer-events: none !important;
+}
+
+/* Date and Time input styling */
+.date-input,
+.time-input {
+    border: none;
+    border-bottom: 1px solid #999;
+    padding: 2px;
+    font-family: 'Sarabun', sans-serif;
+    font-size: 11pt;
+    font-weight: 600;
+    background: white;
+    color: #0056b3;
+}
+
+/* ซ่อน placeholder เมื่อว่าง */
+.date-input::-webkit-input-placeholder,
+.time-input::-webkit-input-placeholder {
+    color: transparent;
+}
+
+.date-input:-moz-placeholder,
+.time-input:-moz-placeholder {
+    color: transparent;
+}
+
+.date-input::-moz-placeholder,
+.time-input::-moz-placeholder {
+    color: transparent;
+}
+
+.date-input:-ms-input-placeholder,
+.time-input:-ms-input-placeholder {
+    color: transparent;
+}
+
+.date-input::placeholder,
+.time-input::placeholder {
+    color: transparent;
+}
+
+.date-input:focus,
+.time-input:focus {
+    outline: none;
+    border-bottom: 2px solid #007bff;
+}
+
+/* ซ่อนไอคอน calendar/clock เมื่อ print */
+.date-input::-webkit-calendar-picker-indicator,
+.time-input::-webkit-calendar-picker-indicator {
+    opacity: 0.5;
+}
+
+.date-input::-webkit-calendar-picker-indicator:hover,
+.time-input::-webkit-calendar-picker-indicator:hover {
+    opacity: 1;
+}
+
+/* Hide date/time picker icons when printing */
+@media print {
+    .date-input::-webkit-calendar-picker-indicator,
+    .time-input::-webkit-calendar-picker-indicator {
+        display: none;
+    }
+    
+    .date-input,
+    .time-input {
+        -webkit-appearance: none;
+        -moz-appearance: textfield;
+        appearance: none;
+    }
+}

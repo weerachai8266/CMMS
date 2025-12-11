@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head><title>Generate Sound</title></head>
+<body>
+<button onclick="generateAndDownload()">Generate Notification Sound</button>
+<script>
+function generateAndDownload() {
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const sampleRate = audioContext.sampleRate;
+    // const duration = 0.3;
+    // const frequency = 2000;
+    
+    const buffer = audioContext.createBuffer(1, sampleRate * duration, sampleRate);
+    const data = buffer.getChannelData(0);
+    
+    for (let i = 0; i < buffer.length; i++) {
+        data[i] = Math.sin(2 * Math.PI * frequency * i / sampleRate) * 0.5;
+        data[i] *= 1 - (i / buffer.length);
+    }
+    
+    const source = audioContext.createBufferSource();
+    source.buffer = buffer;
+    source.connect(audioContext.destination);
+    source.start();
+}
+</script>
+</body>
+</html>
