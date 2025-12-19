@@ -31,7 +31,7 @@
         }
         
         .main-container {
-            max-width: 1400px;
+            max-width: 1800px;
             margin: 0 auto;
         }
         
@@ -379,8 +379,7 @@
                 </div>
                 <h3>แจ้งซ่อม</h3>
                 <p>ฟอร์มแจ้งซ่อมและดูรายการแจ้งซ่อม<br>รายงานปัญหาเครื่องจักรและอุปกรณ์</p>
-            </a>
-            
+            </a>            
             
             <!-- อนุมัติใบแจ้งซ่อม -->
             <a href="pages/approval.php" class="menu-card approval" style="animation-delay: 0.3s">
@@ -408,9 +407,9 @@
                 <h3>สำหรับเจ้าหน้าที่ซ่อมบำรุง</h3>
                 <p>ข้อมูลใบแจ้งซ่อมทั้งหมด<br>ทะเบียนเครื่องจักรและอุปกรณ์ทั้งหมด</p>
             </a>
-            <!-- KPI Dashboard (Coming Soon) -->
-            <a href="#" class="menu-card kpi disabled" style="animation-delay: 0.5s" onclick="alert('ฟีเจอร์นี้กำลังพัฒนา\nFeature Coming Soon!'); return false;">
-                <span class="badge-coming">Coming Soon</span>
+
+            <!-- KPI Dashboard -->
+            <a href="pages/kpi.php" class="menu-card kpi" style="animation-delay: 0.5s">
                 <div class="icon-wrapper">
                     <i class="fas fa-chart-line"></i>
                 </div>
