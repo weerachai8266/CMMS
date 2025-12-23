@@ -107,9 +107,23 @@ function updateKPICards(data) {
     $('#waitingPartsRepairs').text(summary.waiting_parts_count || 0);
     $('#completedRepairs').text(summary.completed_count || 0);
     
-    // Average repair time
-    const avgHours = parseFloat(summary.avg_repair_hours) || 0;
-    $('#avgRepairTime').text(avgHours.toFixed(1));
+    // Total work hours
+    let totalWorkHours = 0;
+    if (data.work_hours_stats && Array.isArray(data.work_hours_stats)) {
+        data.work_hours_stats.forEach(stat => {
+            totalWorkHours += parseFloat(stat.total_hours) || 0;
+        });
+    }
+    $('#totalWorkHours').text(totalWorkHours.toFixed(1));
+    
+    // Total downtime hours
+    let totalDowntimeHours = 0;
+    if (data.downtime_hours_stats && Array.isArray(data.downtime_hours_stats)) {
+        data.downtime_hours_stats.forEach(stat => {
+            totalDowntimeHours += parseFloat(stat.total_hours) || 0;
+        });
+    }
+    $('#totalDowntimeHours').text(totalDowntimeHours.toFixed(1));
     
     // Total cost
     const totalCost = parseFloat(data.cost_stats.total_cost) || 0;

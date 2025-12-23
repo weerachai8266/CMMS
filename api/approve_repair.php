@@ -14,6 +14,12 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
 $approver = sanitize_input($_POST['approver'] ?? '');
 
+// รับข้อมูลอุปกรณ์ที่ใช้อนุมัติ
+$device_type = sanitize_input($_POST['device_type'] ?? null);
+$browser = sanitize_input($_POST['browser'] ?? null);
+$os = sanitize_input($_POST['os'] ?? null);
+$ip_address = $_SERVER['REMOTE_ADDR'] ?? null;
+
 if (!$id || empty($approver)) {
     http_response_code(400);
     json_response(false, 'ข้อมูลไม่ครบถ้วน');
@@ -49,13 +55,17 @@ try {
     $updateStmt->bindValue(':id', $id, PDO::PARAM_INT);
     $updateStmt->execute();
     
-    // บันทึกประวัติการอนุมัติ (ถ้ามีตาราง mt_approval_log)
+    // บันทึกประวัติการอนุมัติพร้อมข้อมูลอุปกรณ์
     try {
-        $logSql = "INSERT INTO mt_approval_log (repair_id, approver, action) 
-                   VALUES (:repair_id, :approver, 'approved')";
+        $logSql = "INSERT INTO mt_approval_log (repair_id, approver, action, device_type, browser, os, ip_address) 
+                   VALUES (:repair_id, :approver, 'approved', :device_type, :browser, :os, :ip_address)";
         $logStmt = $conn->prepare($logSql);
         $logStmt->bindValue(':repair_id', $id, PDO::PARAM_INT);
         $logStmt->bindValue(':approver', $approver);
+        $logStmt->bindValue(':device_type', $device_type);
+        $logStmt->bindValue(':browser', $browser);
+        $logStmt->bindValue(':os', $os);
+        $logStmt->bindValue(':ip_address', $ip_address);
         $logStmt->execute();
     } catch (PDOException $e) {
         // ถ้าตารางยังไม่มีก็ข้าม ไม่ rollback

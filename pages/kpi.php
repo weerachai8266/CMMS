@@ -321,7 +321,7 @@ require_once '../config/config.php';
             </div>
         </div>
         
-        <!-- KPI Cards -->
+        <!-- KPI Cards Row 1 -->
         <div class="kpi-grid">
             <div class="kpi-card primary">
                 <i class="fas fa-clipboard-list kpi-icon"></i>
@@ -357,19 +357,35 @@ require_once '../config/config.php';
                 <div class="kpi-value" id="completedRepairs">0</div>
                 <div class="kpi-detail">รายการ</div>
             </div>
+        </div>
+        
+        <!-- KPI Cards Row 2 - Summary Stats -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="kpi-card purple">
+                    <i class="fas fa-clock kpi-icon"></i>
+                    <div class="kpi-label">เวลาทำงานรวม</div>
+                    <div class="kpi-value" id="totalWorkHours">0</div>
+                    <div class="kpi-detail">ชั่วโมง</div>
+                </div>
+            </div>
             
-            <!-- <div class="kpi-card purple">
-                <i class="fas fa-hourglass-half kpi-icon"></i>
-                <div class="kpi-label">เวลาเฉลี่ยในการซ่อม</div>
-                <div class="kpi-value" id="avgRepairTime">0</div>
-                <div class="kpi-detail">ชั่วโมง</div>
-            </div> -->
+            <div class="col-md-4">
+                <div class="kpi-card orange">
+                    <i class="fas fa-exclamation-circle kpi-icon"></i>
+                    <div class="kpi-label">เวลาหยุดเครื่องรวม</div>
+                    <div class="kpi-value" id="totalDowntimeHours">0</div>
+                    <div class="kpi-detail">ชั่วโมง</div>
+                </div>
+            </div>
             
-            <div class="kpi-card danger">
-                <i class="fas fa-dollar-sign kpi-icon"></i>
-                <div class="kpi-label">ค่าใช้จ่ายรวม</div>
-                <div class="kpi-value" id="totalCost">0</div>
-                <div class="kpi-detail">บาท</div>
+            <div class="col-md-4">
+                <div class="kpi-card danger">
+                    <i class="fas fa-dollar-sign kpi-icon"></i>
+                    <div class="kpi-label">ค่าใช้จ่ายรวม</div>
+                    <div class="kpi-value" id="totalCost">0</div>
+                    <div class="kpi-detail">บาท</div>
+                </div>
             </div>
         </div>
         
@@ -377,7 +393,7 @@ require_once '../config/config.php';
         <div class="row">
             <div class="col-md-6">
                 <div class="chart-container">
-                    <h3><i class="fas fa-chart-pie"></i> สถิติตามสถานะ</h3>
+                    <h3><i class="fas fa-chart-pie" style="color: #007bff;"></i> สถิติตามสถานะ</h3>
                     <div class="chart-wrapper">
                         <canvas id="statusChart"></canvas>
                     </div>
@@ -385,7 +401,7 @@ require_once '../config/config.php';
             </div>
             <div class="col-md-6">
                 <div class="chart-container">
-                    <h3><i class="fas fa-chart-bar"></i> สถิติตามแผนก</h3>
+                    <h3><i class="fas fa-chart-bar" style="color: #28a745;"></i> สถิติตามแผนก</h3>
                     <div class="chart-wrapper">
                         <canvas id="departmentChart"></canvas>
                     </div>
@@ -397,7 +413,7 @@ require_once '../config/config.php';
         <div class="row">
             <div class="col-md-6">
                 <div class="chart-container">
-                    <h3><i class="fas fa-chart-pie"></i> เปอร์เซ็นต์สถานะงานซ่อม</h3>
+                    <h3><i class="fas fa-chart-pie" style="color: #17a2b8;"></i> เปอร์เซ็นต์สถานะงานซ่อม</h3>
                     <div class="chart-wrapper">
                         <canvas id="statusPercentChart"></canvas>
                     </div>
@@ -405,7 +421,7 @@ require_once '../config/config.php';
             </div>
             <div class="col-md-6">
                 <div class="chart-container">
-                    <h3><i class="fas fa-chart-line"></i> แนวโน้มการแจ้งซ่อมรายวัน (30 วันล่าสุด)</h3>
+                    <h3><i class="fas fa-chart-line" style="color: #6f42c1;"></i> แนวโน้มการแจ้งซ่อมรายวัน (30 วันล่าสุด)</h3>
                     <div class="chart-wrapper">
                         <canvas id="trendChart"></canvas>
                     </div>
@@ -417,7 +433,7 @@ require_once '../config/config.php';
         <div class="row">
             <div class="col-md-6">
                 <div class="table-container">
-                    <h3><i class="fas fa-exclamation-triangle"></i> เครื่องจักรที่มีปัญหาบ่อย (Top 10)</h3>
+                    <h3><i class="fas fa-exclamation-triangle" style="color: #ffc107;"></i> เครื่องจักรที่มีปัญหาบ่อย (Top 10)</h3>
                     <div class="table-responsive">
                         <table class="table table-hover" id="frequentMachinesTable">
                             <thead>
@@ -437,7 +453,7 @@ require_once '../config/config.php';
             </div>
             <div class="col-md-6">
                 <div class="table-container">
-                    <h3><i class="fas fa-user-tie"></i> ช่างที่ทำงานมากที่สุด (Top 10)</h3>
+                    <h3><i class="fas fa-user-tie" style="color: #007bff;"></i> ช่างที่ทำงานมากที่สุด (Top 10)</h3>
                     <div class="table-responsive">
                         <table class="table table-hover" id="technicianTable">
                             <thead>
@@ -461,7 +477,7 @@ require_once '../config/config.php';
         <div class="row">
             <div class="col-md-6">
                 <div class="table-container">
-                    <h3><i class="fas fa-money-bill-wave"></i> เครื่องจักรที่มีค่าใช้จ่ายสูงสุด (Top 10)</h3>
+                    <h3><i class="fas fa-money-bill-wave" style="color: #dc3545;"></i> เครื่องจักรที่มีค่าใช้จ่ายสูงสุด (Top 10)</h3>
                     <div class="table-responsive">
                         <table class="table table-hover" id="expensiveMachinesTable">
                             <thead>
@@ -483,7 +499,7 @@ require_once '../config/config.php';
             </div>
             <div class="col-md-6">
                 <div class="table-container">
-                    <h3><i class="fas fa-building"></i> สถิติตามสาขา</h3>
+                    <h3><i class="fas fa-building" style="color: #28a745;"></i> สถิติตามสาขา</h3>
                     <div class="table-responsive">
                         <table class="table table-hover" id="branchTable">
                             <thead>

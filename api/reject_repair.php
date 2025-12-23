@@ -15,6 +15,12 @@ $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
 $approver = sanitize_input($_POST['approver'] ?? '');
 $reason = sanitize_input($_POST['reason'] ?? '');
 
+// รับข้อมูลอุปกรณ์ที่ใช้ปฏิเสธ
+$device_type = sanitize_input($_POST['device_type'] ?? null);
+$browser = sanitize_input($_POST['browser'] ?? null);
+$os = sanitize_input($_POST['os'] ?? null);
+$ip_address = $_SERVER['REMOTE_ADDR'] ?? null;
+
 if (!$id || empty($approver) || empty($reason)) {
     http_response_code(400);
     json_response(false, 'ข้อมูลไม่ครบถ้วน กรุณาระบุเหตุผลในการปฏิเสธ');
@@ -52,14 +58,18 @@ try {
     $updateStmt->bindValue(':id', $id, PDO::PARAM_INT);
     $updateStmt->execute();
     
-    // บันทึกประวัติการปฏิเสธ (ถ้ามีตาราง mt_approval_log)
+    // บันทึกประวัติการปฏิเสธพร้อมข้อมูลอุปกรณ์
     try {
-        $logSql = "INSERT INTO mt_approval_log (repair_id, approver, action, reason) 
-                   VALUES (:repair_id, :approver, 'rejected', :reason)";
+        $logSql = "INSERT INTO mt_approval_log (repair_id, approver, action, reason, device_type, browser, os, ip_address) 
+                   VALUES (:repair_id, :approver, 'rejected', :reason, :device_type, :browser, :os, :ip_address)";
         $logStmt = $conn->prepare($logSql);
         $logStmt->bindValue(':repair_id', $id, PDO::PARAM_INT);
         $logStmt->bindValue(':approver', $approver);
         $logStmt->bindValue(':reason', $reason);
+        $logStmt->bindValue(':device_type', $device_type);
+        $logStmt->bindValue(':browser', $browser);
+        $logStmt->bindValue(':os', $os);
+        $logStmt->bindValue(':ip_address', $ip_address);
         $logStmt->execute();
     } catch (PDOException $e) {
         // ถ้าตารางยังไม่มีก็ข้าม ไม่ rollback

@@ -443,6 +443,55 @@ try {
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script>
+        // ฟังก์ชันตรวจจับอุปกรณ์ (เพื่อความปลอดภัย)
+        function getDeviceInfo() {
+            const ua = navigator.userAgent;
+            let deviceType = 'desktop';
+            let browser = 'Unknown';
+            let os = 'Unknown';
+            
+            // ตรวจจับประเภทอุปกรณ์
+            if (/tablet|ipad|playbook|silk/i.test(ua) || (navigator.maxTouchPoints && navigator.maxTouchPoints > 2 && /MacIntel/.test(navigator.platform))) {
+                deviceType = 'tablet';
+            } else if (/Mobile|Android|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua)) {
+                deviceType = 'mobile';
+            }
+            
+            // ตรวจจับ Browser
+            if (ua.indexOf('Chrome') > -1 && ua.indexOf('Edg') === -1 && ua.indexOf('OPR') === -1) {
+                browser = 'Chrome';
+            } else if (ua.indexOf('Safari') > -1 && ua.indexOf('Chrome') === -1) {
+                browser = 'Safari';
+            } else if (ua.indexOf('Firefox') > -1) {
+                browser = 'Firefox';
+            } else if (ua.indexOf('Edg') > -1) {
+                browser = 'Edge';
+            } else if (ua.indexOf('OPR') > -1 || ua.indexOf('Opera') > -1) {
+                browser = 'Opera';
+            } else if (ua.indexOf('Trident') > -1 || ua.indexOf('MSIE') > -1) {
+                browser = 'Internet Explorer';
+            }
+            
+            // ตรวจจับ OS
+            if (ua.indexOf('Win') > -1) {
+                os = 'Windows';
+            } else if (ua.indexOf('Mac') > -1) {
+                os = 'macOS';
+            } else if (ua.indexOf('Linux') > -1) {
+                os = 'Linux';
+            } else if (ua.indexOf('Android') > -1) {
+                os = 'Android';
+            } else if (ua.indexOf('like Mac') > -1) {
+                os = 'iOS';
+            }
+            
+            return {
+                device_type: deviceType,
+                browser: browser,
+                os: os
+            };
+        }
+        
         function approveRepair(id, docNo) {
             $('#approve_repair_id').val(id);
             $('#approve_doc_no').text(docNo);
@@ -467,13 +516,19 @@ try {
                 return;
             }
 
+            // ดึงข้อมูลอุปกรณ์
+            const deviceInfo = getDeviceInfo();
+            
             // Send AJAX request
             $.ajax({
                 url: '../api/approve_repair.php',
                 method: 'POST',
                 data: {
                     id: id,
-                    approver: approver
+                    approver: approver,
+                    device_type: deviceInfo.device_type,
+                    browser: deviceInfo.browser,
+                    os: deviceInfo.os
                 },
                 dataType: 'json',
                 success: function(response) {
@@ -506,6 +561,9 @@ try {
                 return;
             }
 
+            // ดึงข้อมูลอุปกรณ์
+            const deviceInfo = getDeviceInfo();
+            
             // Send AJAX request
             $.ajax({
                 url: '../api/reject_repair.php',
@@ -513,7 +571,10 @@ try {
                 data: {
                     id: id,
                     approver: approver,
-                    reason: reason
+                    reason: reason,
+                    device_type: deviceInfo.device_type,
+                    browser: deviceInfo.browser,
+                    os: deviceInfo.os
                 },
                 dataType: 'json',
                 success: function(response) {

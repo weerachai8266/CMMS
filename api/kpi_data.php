@@ -150,24 +150,41 @@ try {
     $stmt->execute([':date_from' => $date_from, ':date_to' => $date_to]);
     $expensive_machines = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
-    // ===== 9. สถิติเวลาเฉลี่ยในแต่ละสถานะ =====
-    $sql_status_time = "SELECT 
+    // ===== 9. สถิติเวลาทำงาน (work_hours) ตามสถานะ =====
+    $sql_work_hours = "SELECT 
         status,
         COUNT(*) as count,
-        AVG(TIMESTAMPDIFF(HOUR, start_job, 
-            CASE 
-                WHEN end_job IS NOT NULL THEN end_job 
-                ELSE NOW() 
-            END)) as avg_hours_in_status
-        FROM mt_repair
-        WHERE DATE(start_job) BETWEEN :date_from AND :date_to
+        AVG(work_hours) as avg_hours,
+        SUM(work_hours) as total_hours,
+        MIN(work_hours) as min_hours,
+        MAX(work_hours) as max_hours
+        FROM mt_machine_history
+        WHERE DATE(start_date) BETWEEN :date_from AND :date_to
+        AND work_hours IS NOT NULL
         GROUP BY status";
     
-    $stmt = $conn->prepare($sql_status_time);
+    $stmt = $conn->prepare($sql_work_hours);
     $stmt->execute([':date_from' => $date_from, ':date_to' => $date_to]);
-    $status_time_stats = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $work_hours_stats = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
-    // ===== 10. จำนวนเครื่องจักรทั้งหมด =====
+    // ===== 10. สถิติเวลาหยุดเครื่อง (downtime_hours) ตามสถานะ =====
+    $sql_downtime_hours = "SELECT 
+        status,
+        COUNT(*) as count,
+        AVG(downtime_hours) as avg_hours,
+        SUM(downtime_hours) as total_hours,
+        MIN(downtime_hours) as min_hours,
+        MAX(downtime_hours) as max_hours
+        FROM mt_machine_history
+        WHERE DATE(start_date) BETWEEN :date_from AND :date_to
+        AND downtime_hours IS NOT NULL
+        GROUP BY status";
+    
+    $stmt = $conn->prepare($sql_downtime_hours);
+    $stmt->execute([':date_from' => $date_from, ':date_to' => $date_to]);
+    $downtime_hours_stats = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // ===== 11. จำนวนเครื่องจักรทั้งหมด =====
     $sql_machines = "SELECT COUNT(*) as total_machines FROM mt_machines";
     $stmt = $conn->query($sql_machines);
     $machine_count = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -182,7 +199,8 @@ try {
         'data' => [
             'summary' => $summary,
             'status_stats' => $status_stats,
-            'status_time_stats' => $status_time_stats,
+            'work_hours_stats' => $work_hours_stats,
+            'downtime_hours_stats' => $downtime_hours_stats,
             'frequent_machines' => $frequent_machines,
             'department_stats' => $dept_stats,
             'branch_stats' => $branch_stats,

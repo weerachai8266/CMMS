@@ -379,7 +379,7 @@
                 </div>
                 <h3>แจ้งซ่อม</h3>
                 <p>ฟอร์มแจ้งซ่อมและดูรายการแจ้งซ่อม<br>รายงานปัญหาเครื่องจักรและอุปกรณ์</p>
-            </a>            
+            </a> 
             
             <!-- อนุมัติใบแจ้งซ่อม -->
             <a href="pages/approval.php" class="menu-card approval" style="animation-delay: 0.3s">
