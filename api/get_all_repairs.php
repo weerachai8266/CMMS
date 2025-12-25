@@ -34,6 +34,14 @@ try {
         $params[':machine_number'] = $filters['machine_number'];
     }
     
+    if (!empty($filters['registry_signer'])) {
+        if ($filters['registry_signer'] === 'empty') {
+            $sql .= " AND (registry_signer IS NULL OR registry_signer = '')";
+        } elseif ($filters['registry_signer'] === 'not_empty') {
+            $sql .= " AND registry_signer IS NOT NULL AND registry_signer != ''";
+        }
+    }
+    
     $sql .= " ORDER BY start_job DESC";
     
     $stmt = $conn->prepare($sql);

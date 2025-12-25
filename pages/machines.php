@@ -126,11 +126,11 @@ require_once '../config/config.php';
                             <label>วันที่แจ้งซ่อม:</label>
                             <input type="date" class="form-control" id="filter_repair_date">
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <label>เลขที่:</label>
                             <input type="text" class="form-control" id="filter_document_no" placeholder="ค้นหาเลขที่...">
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <label>สถานะ:</label>
                             <select class="form-control" id="filter_status">
                                 <option value="">ทั้งหมด</option>
@@ -141,11 +141,23 @@ require_once '../config/config.php';
                                 <option value="40">ซ่อมเสร็จสิ้น</option>
                             </select>
                         </div>
+                        <div class="col-md-2">
+                            <label>ผู้ลงประวัติ:</label>
+                            <select class="form-control" id="filter_registry_signer">
+                                <option value="">ทั้งหมด</option>
+                                <option value="not_empty">มีผู้ลงประวัติ</option>
+                                <option value="empty">ยังไม่มีผู้ลงประวัติ</option>
+                            </select>
+                        </div>
+                    
                         <div class="col-md-3">
                             <label>&nbsp;</label>
                             <button class="btn btn-primary btn-block" onclick="filterRepairs()">
                                 <i class="fas fa-search"></i> ค้นหา
-                            </button>
+                            </button>                            
+                            <!-- <button class="btn btn-secondary btn-block" onclick="clearFilters()">
+                                <i class="fas fa-redo"></i> ล้างตัวกรอง
+                            </button> -->
                         </div>
                     </div>
                 </div>
@@ -162,12 +174,13 @@ require_once '../config/config.php';
                                 <th>ปัญหา</th>
                                 <th>สถานะ</th>
                                 <th>ผู้รับผิดชอบ</th>
+                                <th>ผู้ลงประวัติ</th>
                                 <th style="width: 120px;">จัดการ</th>
                             </tr>
                         </thead>
                         <tbody id="repairsTableBody">
                             <tr>
-                                <td colspan="8" class="text-center">
+                                <td colspan="9" class="text-center">
                                     <i class="fas fa-spinner fa-spin"></i> กำลังโหลดข้อมูล...
                                 </td>
                             </tr>
@@ -1011,7 +1024,7 @@ require_once '../config/config.php';
     </script>
     <script>
         // Load repairs data
-        function loadRepairs(repairDate = '', documentNo = '', status = '') {
+        function loadRepairs(repairDate = '', documentNo = '', status = '', registrySigner = '') {
             $.ajax({
                 url: '../api/get_all_repairs.php',
                 method: 'POST',
@@ -1019,7 +1032,8 @@ require_once '../config/config.php';
                 data: JSON.stringify({
                     repair_date: repairDate,
                     document_no: documentNo,
-                    status: status
+                    status: status,
+                    registry_signer: registrySigner
                 }),
                 success: function(response) {
                     let html = '';
@@ -1054,6 +1068,7 @@ require_once '../config/config.php';
                             html += '<td>' + (repair.issue ? (repair.issue.length > 50 ? repair.issue.substring(0, 50) + '...' : repair.issue) : '-') + '</td>';
                             html += '<td>' + statusBadge + '</td>';
                             html += '<td>' + (repair.handled_by || '-') + '</td>';
+                            html += '<td>' + (repair.registry_signer || '-') + '</td>';
                             html += '<td class="text-center">';
                             html += '<a href="print_form.php?id=' + repair.id + '" class="btn btn-sm btn-primary" target="_blank" title="ดูรายละเอียด"><i class="fas fa-eye"></i></a> ';
                             html += '<button class="btn btn-sm btn-success" onclick="printRepair(' + repair.id + ')" title="พิมพ์ใบแจ้งซ่อม"><i class="fas fa-print"></i></button> ';
@@ -1063,12 +1078,12 @@ require_once '../config/config.php';
                             html += '</tr>';
                         });
                     } else {
-                        html = '<tr><td colspan="8" class="text-center">ไม่พบข้อมูล</td></tr>';
+                        html = '<tr><td colspan="9" class="text-center">ไม่พบข้อมูล</td></tr>';
                     }
                     $('#repairsTableBody').html(html);
                 },
                 error: function() {
-                    $('#repairsTableBody').html('<tr><td colspan="8" class="text-center text-danger">เกิดข้อผิดพลาดในการโหลดข้อมูล</td></tr>');
+                    $('#repairsTableBody').html('<tr><td colspan="9" class="text-center text-danger">เกิดข้อผิดพลาดในการโหลดข้อมูล</td></tr>');
                 }
             });
         }
@@ -1078,7 +1093,16 @@ require_once '../config/config.php';
             const repairDate = $('#filter_repair_date').val();
             const documentNo = $('#filter_document_no').val();
             const status = $('#filter_status').val();
-            loadRepairs(repairDate, documentNo, status);
+            const registrySigner = $('#filter_registry_signer').val();
+            loadRepairs(repairDate, documentNo, status, registrySigner);
+        }
+
+        function clearFilters() {
+            $('#filter_repair_date').val('');
+            $('#filter_document_no').val('');
+            $('#filter_status').val('');
+            $('#filter_registry_signer').val('');
+            loadRepairs();
         }
 
         // Print repair form

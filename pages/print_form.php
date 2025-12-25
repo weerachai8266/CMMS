@@ -60,10 +60,15 @@ try {
     $mtc_date_formatted = $data['mtc_date'] ? date('Y-m-d', strtotime($data['mtc_date'])) : '';
     
     // Format Section 3 dates
-    $section3_start_date = $data['start_date'] ? date('Y-m-d', strtotime($data['start_date'])) : '';
-    $section3_start_time = $data['start_time'] ? date('H:i', strtotime($data['start_time'])) : '';
-    $section3_end_date = $data['end_date'] ? date('Y-m-d', strtotime($data['end_date'])) : '';
-    $section3_end_time = $data['end_time'] ? date('H:i', strtotime($data['end_time'])) : '';
+    // ใช้ approved_at สำหรับวันที่เริ่มปฏิบัติงาน ถ้าไม่มี start_date
+    $section3_start_date = $data['start_date'] ? date('Y-m-d', strtotime($data['start_date'])) : 
+                          ($data['approved_at'] ? date('Y-m-d', strtotime($data['approved_at'])) : '');
+    $section3_start_time = $data['start_time'] ? date('H:i', strtotime($data['start_time'])) : 
+                          ($data['approved_at'] ? date('H:i', strtotime($data['approved_at'])) : '');
+    $section3_end_date = $data['end_date'] ? date('Y-m-d', strtotime($data['end_date'])) : 
+                        ($data['end_job'] ? date('Y-m-d', strtotime($data['end_job'])) : '');
+    $section3_end_time = $data['end_time'] ? date('H:i', strtotime($data['end_time'])) : 
+                        ($data['end_job'] ? date('H:i', strtotime($data['end_job'])) : '');
     $registry_date_formatted = $data['registry_date'] ? date('Y-m-d', strtotime($data['registry_date'])) : '';
     
 } catch (PDOException $e) {
@@ -373,6 +378,9 @@ try {
                 input.addEventListener('change', updateInputClass);
                 input.addEventListener('input', updateInputClass);
             });
+            
+            // คำนวณเวลาอัตโนมัติเมื่อโหลดหน้าเสร็จ (กรณีมีข้อมูลวันที่อยู่แล้ว)
+            calculateWorkHours();
         });
         
         // Calculate work hours automatically
