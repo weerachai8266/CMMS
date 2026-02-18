@@ -91,6 +91,9 @@ try {
                             <button class="btn btn-sm btn-danger btn-update-status" data-id="' . $row["id"] . '" data-status="30" title="รออะไหล่">
                                 <i class="fas fa-hourglass-half"></i>
                             </button>
+                            <button class="btn btn-sm btn-dark btn-cancel-repair" data-id="' . $row["id"] . '" title="ยกเลิก">
+                                <i class="fas fa-times"></i>
+                            </button>
                         </div>
                     ';
                     break;
@@ -103,6 +106,13 @@ try {
                         </button>
                     ';
                     break;
+                case STATUS_CANCELLED:
+                    $statusClass = 'badge-dark';
+                    $statusText = '✕ ยกเลิก';
+                    $buttonHtml = '
+                        <span class="text-muted small">ยกเลิกแล้ว</span>
+                    ';
+                    break;
                 case STATUS_WAITING_PARTS:
                     $statusClass = 'badge-danger';
                     $statusText = '⚙️ รออะไหล่';
@@ -113,6 +123,9 @@ try {
                             </button>
                             <button class="btn btn-sm btn-secondary btn-update-status" data-id="' . $row["id"] . '" data-status="20" title="กลับรอดำเนินการ">
                                 <i class="fas fa-undo"></i>
+                            </button>
+                            <button class="btn btn-sm btn-dark btn-cancel-repair" data-id="' . $row["id"] . '" title="ยกเลิก">
+                                <i class="fas fa-times"></i>
                             </button>
                         </div>
                     ';

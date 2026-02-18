@@ -1,5 +1,6 @@
 <?php
 session_start();
+require_once '../config/db.php';
 
 // ถ้า login แล้วให้ redirect ไปหน้า machines
 if (isset($_SESSION['technician_logged_in']) && $_SESSION['technician_logged_in'] === true) {
@@ -10,25 +11,90 @@ if (isset($_SESSION['technician_logged_in']) && $_SESSION['technician_logged_in'
 // ตรวจสอบการ login
 $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $username = $_POST['username'] ?? '';
+    $username = trim($_POST['username'] ?? '');
     $password = $_POST['password'] ?? '';
     
-    // ตรวจสอบ username และ password
-    // TODO: ในอนาคตควรเก็บใน database และเข้ารหัส password
-    $valid_users = [
-        'admin' => 'admin123',
-        'technician' => 'tech123',
-        'maintenance' => 'mt123'
-    ];
-    
-    if (isset($valid_users[$username]) && $valid_users[$username] === $password) {
-        $_SESSION['technician_logged_in'] = true;
-        $_SESSION['technician_username'] = $username;
-        $_SESSION['login_time'] = time();
-        header('Location: ../pages/machines.php');
-        exit;
+    if (empty($username) || empty($password)) {
+        $error = 'กรุณากรอกชื่อผู้ใช้และรหัสผ่าน';
     } else {
-        $error = 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง';
+        try {
+            // ดึงข้อมูล user จากฐานข้อมูล
+            $stmt = $conn->prepare("
+                SELECT id, username, password, full_name, role, email, 
+                       employee_id, department, branch, position, is_active,
+                       login_attempts, locked_until
+                FROM mt_users 
+                WHERE username = :username
+            ");
+            $stmt->execute([':username' => $username]);
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($user) {
+                // ตรวจสอบว่า account ถูกล็อคหรือไม่
+                if ($user['locked_until'] && strtotime($user['locked_until']) > time()) {
+                    $error = 'บัญชีของคุณถูกล็อค กรุณารอ ' . date('H:i:s', strtotime($user['locked_until']) - time()) . ' นาที';
+                } 
+                // ตรวจสอบสถานะ active
+                elseif ($user['is_active'] != 1) {
+                    $error = 'บัญชีของคุณถูกปิดการใช้งาน กรุณาติดต่อผู้ดูแลระบบ';
+                }
+                // ตรวจสอบรหัสผ่าน
+                elseif (password_verify($password, $user['password'])) {
+                    // Login สำเร็จ
+                    $_SESSION['technician_logged_in'] = true;
+                    $_SESSION['technician_username'] = $user['username'];
+                    $_SESSION['user_id'] = $user['id'];
+                    $_SESSION['user_full_name'] = $user['full_name'];
+                    $_SESSION['user_role'] = $user['role'];
+                    $_SESSION['user_email'] = $user['email'];
+                    $_SESSION['user_department'] = $user['department'];
+                    $_SESSION['user_branch'] = $user['branch'];
+                    $_SESSION['login_time'] = time();
+                    
+                    // รีเซ็ต login attempts และอัปเดต last_login
+                    $updateStmt = $conn->prepare("
+                        UPDATE mt_users 
+                        SET login_attempts = 0, 
+                            locked_until = NULL,
+                            last_login = NOW()
+                        WHERE id = :id
+                    ");
+                    $updateStmt->execute([':id' => $user['id']]);
+                    
+                    header('Location: ../pages/machines.php');
+                    exit;
+                } else {
+                    // รหัสผ่านผิด - เพิ่ม login attempts
+                    $attempts = $user['login_attempts'] + 1;
+                    $locked_until = null;
+                    
+                    // ล็อค account ถ้าพยายามเกิน 5 ครั้ง
+                    if ($attempts >= 5) {
+                        $locked_until = date('Y-m-d H:i:s', strtotime('+15 minutes'));
+                        $error = 'คุณพยายาม login ผิดเกินกำหนด บัญชีถูกล็อคเป็นเวลา 15 นาที';
+                    } else {
+                        $error = 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง (พยายาม ' . $attempts . '/5 ครั้ง)';
+                    }
+                    
+                    $updateStmt = $conn->prepare("
+                        UPDATE mt_users 
+                        SET login_attempts = :attempts,
+                            locked_until = :locked_until
+                        WHERE id = :id
+                    ");
+                    $updateStmt->execute([
+                        ':attempts' => $attempts,
+                        ':locked_until' => $locked_until,
+                        ':id' => $user['id']
+                    ]);
+                }
+            } else {
+                $error = 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง';
+            }
+        } catch (PDOException $e) {
+            error_log('Login error: ' . $e->getMessage());
+            $error = 'เกิดข้อผิดพลาดในระบบ กรุณาลองใหม่อีกครั้ง';
+        }
     }
 }
 ?>

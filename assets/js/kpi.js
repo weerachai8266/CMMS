@@ -3,11 +3,15 @@
 
 let statusChart, departmentChart, trendChart, statusPercentChart;
 let monthlyPerformanceChart, paretoChart;
+let currentKPIData = null; // เก็บข้อมูล KPI ปัจจุบัน
 
 // เรียกใช้เมื่อโหลดหน้าเสร็จ
 $(document).ready(function() {
     // Set default date range (current month)
     setDateRange('month');
+    
+    // Load filter options (department, branch)
+    loadFilterOptions();
     
     // Load KPI data
     loadKPIData();
@@ -61,6 +65,9 @@ function formatDate(date) {
 function loadKPIData() {
     const dateFrom = $('#dateFrom').val();
     const dateTo = $('#dateTo').val();
+    const department = $('#filterDepartment').val();
+    const branch = $('#filterBranch').val();
+    const status = $('#filterStatus').val();
     
     if (!dateFrom || !dateTo) {
         alert('กรุณาเลือกช่วงวันที่');
@@ -75,14 +82,19 @@ function loadKPIData() {
         method: 'GET',
         data: {
             date_from: dateFrom,
-            date_to: dateTo
+            date_to: dateTo,
+            department: department,
+            branch: branch,
+            status: status
         },
         dataType: 'json',
         success: function(response) {
             if (response.success) {
+                currentKPIData = response.data; // เก็บข้อมูลไว้
                 updateKPICards(response.data);
                 updateCharts(response.data);
                 updateTables(response.data);
+                checkThresholdAlerts(response.data);
             } else {
                 alert('เกิดข้อผิดพลาด: ' + response.message);
             }
@@ -101,12 +113,37 @@ function loadKPIData() {
 // อัปเดต KPI Cards
 function updateKPICards(data) {
     const summary = data.summary;
+    const comparison = data.comparison || {};
     
+    // Update Key Metrics Section
+    $('#keyTotalRepairs').text(summary.total_repairs || 0);
+    
+    const totalRepairs = parseInt(summary.total_repairs) || 0;
+    const completedRepairs = parseInt(summary.completed_count) || 0;
+    const successRate = totalRepairs > 0 ? ((completedRepairs / totalRepairs) * 100).toFixed(1) : 0;
+    $('#keySuccessRate').text(successRate);
+    
+    const mtbfDays = parseFloat(data.overall_mtbf?.mtbf_days) || 0;
+    $('#keyMtbfDays').text(mtbfDays.toFixed(1));
+    
+    const totalCost = parseFloat(data.cost_stats.total_cost) || 0;
+    $('#keyTotalCost').text(totalCost.toLocaleString('th-TH', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+    }));
+    
+    // Update regular KPI cards
     $('#totalRepairs').text(summary.total_repairs || 0);
+    addTrendBadge('#totalRepairs', summary.total_repairs, comparison.total_repairs);
+    
     $('#pendingRepairs').text(summary.pending_count || 0);
     $('#inProgressRepairs').text(summary.in_progress_count || 0);
     $('#waitingPartsRepairs').text(summary.waiting_parts_count || 0);
     $('#completedRepairs').text(summary.completed_count || 0);
+    
+    // Success Rate (already calculated above)
+    $('#successRate').text(successRate);
+    addTrendBadge('#successRate', successRate, comparison.success_rate);
     
     // Total work hours
     let totalWorkHours = 0;
@@ -126,12 +163,36 @@ function updateKPICards(data) {
     }
     $('#totalDowntimeHours').text(totalDowntimeHours.toFixed(1));
     
-    // Total cost
-    const totalCost = parseFloat(data.cost_stats.total_cost) || 0;
+    // Total cost (already calculated and formatted above, just update the card)
     $('#totalCost').text(totalCost.toLocaleString('th-TH', {
         minimumFractionDigits: 0,
         maximumFractionDigits: 0
     }));
+    
+    // MTTR (Mean Time To Repair)
+    const mttr = parseFloat(summary.avg_repair_hours) || 0;
+    $('#mttrHours').text(mttr.toFixed(1));
+    addTrendBadge('#mttrHours', mttr, comparison.mttr, true); // true = lower is better
+    
+    // Response Time
+    const responseTime = parseFloat(summary.avg_approval_minutes) || 0;
+    $('#responseTime').text(responseTime.toFixed(0));
+    addTrendBadge('#responseTime', responseTime, comparison.response_time, true);
+    
+    // OEE (Overall Equipment Effectiveness)
+    // OEE = Availability × Performance × Quality
+    // Simplified: (Total Time - Downtime) / Total Time × Success Rate
+    const totalTime = totalWorkHours + totalDowntimeHours;
+    const availability = totalTime > 0 ? ((totalTime - totalDowntimeHours) / totalTime) : 0;
+    const quality = successRate / 100;
+    const oee = (availability * quality * 100).toFixed(1);
+    $('#oeePercent').text(oee);
+    addTrendBadge('#oeePercent', oee, comparison.oee);
+    
+    // First Time Fix Rate
+    const firstTimeFixRate = parseFloat(summary.first_time_fix_rate) || 0;
+    $('#firstTimeFixRate').text(firstTimeFixRate.toFixed(1));
+    addTrendBadge('#firstTimeFixRate', firstTimeFixRate, comparison.first_time_fix_rate);
 }
 
 // อัปเดตกราฟทั้งหมด
@@ -214,9 +275,24 @@ function updateStatusChart(statusData) {
                             const value = context.parsed || 0;
                             const total = context.dataset.data.reduce((a, b) => a + b, 0);
                             const percentage = ((value / total) * 100).toFixed(1);
-                            return `${label}: ${value} (${percentage}%)`;
+                            return `${label}: ${value} รายการ (${percentage}%)`;
+                        },
+                        afterLabel: function(context) {
+                            return 'คลิกเพื่อดูรายละเอียด';
                         }
-                    }
+                    },
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    titleFont: { size: 14, family: 'Sarabun', weight: 'bold' },
+                    bodyFont: { size: 13, family: 'Sarabun' },
+                    padding: 12,
+                    displayColors: true
+                }
+            },
+            onClick: (event, elements) => {
+                if (elements.length > 0) {
+                    const index = elements[0].index;
+                    const status = Object.keys(statusLabels)[index];
+                    showStatusDetails(status, statusLabels[status]);
                 }
             }
         }
@@ -838,4 +914,638 @@ function updateMTBFTable(mtbfData) {
         `;
         tbody.append(row);
     });
+}
+
+// ==================== New Functions ====================
+
+// Load filter options (departments and branches)
+function loadFilterOptions() {
+    $.ajax({
+        url: '../api/kpi_data.php',
+        method: 'GET',
+        data: { action: 'get_filters' },
+        dataType: 'json',
+        success: function(response) {
+            if (response.success) {
+                // Populate departments
+                const deptSelect = $('#filterDepartment');
+                if (response.data.departments) {
+                    response.data.departments.forEach(dept => {
+                        deptSelect.append(`<option value="${dept}">${dept}</option>`);
+                    });
+                }
+                
+                // Populate branches
+                const branchSelect = $('#filterBranch');
+                if (response.data.branches) {
+                    response.data.branches.forEach(branch => {
+                        branchSelect.append(`<option value="${branch}">${branch}</option>`);
+                    });
+                }
+            }
+        }
+    });
+}
+
+// Clear all filters
+function clearFilters() {
+    $('#filterDepartment').val('');
+    $('#filterBranch').val('');
+    $('#filterStatus').val('');
+    setDateRange('month'); // Reset to current month
+}
+
+// Add trend badge to show comparison with previous period
+function addTrendBadge(selector, currentValue, previousValue, lowerIsBetter = false) {
+    if (previousValue === undefined || previousValue === null) return;
+    
+    const $element = $(selector).parent();
+    $element.find('.trend-badge').remove(); // Remove existing badge
+    
+    const current = parseFloat(currentValue) || 0;
+    const previous = parseFloat(previousValue) || 0;
+    
+    if (previous === 0) return;
+    
+    const percentChange = ((current - previous) / previous * 100).toFixed(1);
+    let badgeClass = '';
+    let icon = '';
+    
+    if (lowerIsBetter) {
+        // For metrics where lower is better (MTTR, Response Time)
+        if (current < previous) {
+            badgeClass = 'trend-up';
+            icon = '<i class="fas fa-arrow-down"></i>';
+        } else if (current > previous) {
+            badgeClass = 'trend-down';
+            icon = '<i class="fas fa-arrow-up"></i>';
+        }
+    } else {
+        // For metrics where higher is better
+        if (current > previous) {
+            badgeClass = 'trend-up';
+            icon = '<i class="fas fa-arrow-up"></i>';
+        } else if (current < previous) {
+            badgeClass = 'trend-down';
+            icon = '<i class="fas fa-arrow-down"></i>';
+        }
+    }
+    
+    if (badgeClass) {
+        $(selector).after(`<span class="trend-badge ${badgeClass}">${icon} ${Math.abs(percentChange)}%</span>`);
+    }
+}
+
+// Check threshold alerts
+function checkThresholdAlerts(data) {
+    const alerts = [];
+    const thresholds = getThresholds();
+    
+    // Check MTBF
+    const mtbfDays = parseFloat(data.overall_mtbf.mtbf_days) || 0;
+    if (mtbfDays > 0 && mtbfDays < thresholds.mtbf) {
+        alerts.push({
+            type: 'danger',
+            message: `🔴 MTBF ต่ำกว่า ${thresholds.mtbf} วัน (ปัจจุบัน: ${mtbfDays.toFixed(2)} วัน) - ต้องดูแลเร่งด่วน!`
+        });
+    }
+    
+    // Check MTTR
+    const mttr = parseFloat(data.summary.avg_repair_hours) || 0;
+    if (mttr > thresholds.mttr) {
+        alerts.push({
+            type: 'danger',
+            message: `🔴 MTTR สูงกว่า ${thresholds.mttr} ชั่วโมง (ปัจจุบัน: ${mttr.toFixed(1)} ชม.) - ใช้เวลาซ่อมนานเกินไป!`
+        });
+    }
+    
+    // Check success rate
+    const totalRepairs = parseInt(data.summary.total_repairs) || 0;
+    const completedRepairs = parseInt(data.summary.completed_count) || 0;
+    const successRate = totalRepairs > 0 ? ((completedRepairs / totalRepairs) * 100) : 0;
+    if (successRate < thresholds.successRate) {
+        alerts.push({
+            type: 'warning',
+            message: `⚠️ อัตราความสำเร็จต่ำกว่า ${thresholds.successRate}% (ปัจจุบัน: ${successRate.toFixed(1)}%)`
+        });
+    }
+    
+    // Check pending repairs
+    const pendingCount = parseInt(data.summary.pending_count) || 0;
+    if (pendingCount > thresholds.pending) {
+        alerts.push({
+            type: 'warning',
+            message: `⚠️ มีใบแจ้งซ่อมรออนุมัติ ${pendingCount} รายการ (เกินเกณฑ์ ${thresholds.pending} รายการ)`
+        });
+    }
+    
+    // Check OEE
+    const totalWorkHours = parseFloat(data.cost_stats.total_work_hours) || 0;
+    const totalDowntimeHours = parseFloat(data.cost_stats.total_downtime_hours) || 0;
+    const totalTime = totalWorkHours + totalDowntimeHours;
+    const availability = totalTime > 0 ? ((totalTime - totalDowntimeHours) / totalTime) : 0;
+    const quality = successRate / 100;
+    const oee = (availability * quality * 100);
+    
+    if (oee > 0 && oee < thresholds.oee) {
+        alerts.push({
+            type: 'warning',
+            message: `⚠️ OEE ต่ำกว่า ${thresholds.oee}% (ปัจจุบัน: ${oee.toFixed(1)}%) - ประสิทธิภาพต่ำ`
+        });
+    }
+    
+    // Check Response Time
+    const responseTime = parseFloat(data.summary.avg_approval_minutes) || 0;
+    if (responseTime > thresholds.responseTime) {
+        alerts.push({
+            type: 'warning',
+            message: `⚠️ เวลาตอบสนองสูงกว่า ${thresholds.responseTime} นาที (ปัจจุบัน: ${responseTime.toFixed(0)} นาที)`
+        });
+    }
+    
+    // Check Downtime
+    if (totalDowntimeHours > thresholds.downtime) {
+        alerts.push({
+            type: 'warning',
+            message: `⚠️ เวลาหยุดเครื่องสูงกว่า ${thresholds.downtime} ชั่วโมง (ปัจจุบัน: ${totalDowntimeHours.toFixed(1)} ชม.)`
+        });
+    }
+    
+    // Display alerts
+    displayAlerts(alerts);
+}
+
+// Display alert notifications
+function displayAlerts(alerts) {
+    // Remove existing alerts
+    $('.alert-notification').remove();
+    
+    if (alerts.length === 0) return;
+    
+    const alertContainer = $('<div class="alert-notification" style="position: fixed; top: 80px; right: 20px; z-index: 9998; max-width: 400px;"></div>');
+    
+    alerts.forEach(alert => {
+        const alertBox = $(`
+            <div class="alert alert-${alert.type} alert-dismissible fade show mb-2" role="alert">
+                ${alert.message}
+                <button type="button" class="close" data-dismiss="alert">
+                    <span>&times;</span>
+                </button>
+            </div>
+        `);
+        alertContainer.append(alertBox);
+    });
+    
+    $('body').append(alertContainer);
+    
+    // Auto dismiss after 10 seconds
+    setTimeout(() => {
+        alertContainer.fadeOut(500, function() {
+            $(this).remove();
+        });
+    }, 10000);
+}
+
+// Export to PDF
+function exportToPDF() {
+    if (!currentKPIData) {
+        alert('กรุณาโหลดข้อมูลก่อนส่งออก');
+        return;
+    }
+    
+    alert('กำลังสร้าง PDF... (ใช้เวลาสักครู่)');
+    
+    // Hide buttons and filters for cleaner export
+    $('.btn, .filter-section').hide();
+    
+    html2canvas(document.body, {
+        scale: 2,
+        logging: false,
+        useCORS: true
+    }).then(canvas => {
+        const imgData = canvas.toDataURL('image/png');
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        
+        const imgWidth = 210; // A4 width in mm
+        const pageHeight = 297; // A4 height in mm
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        let heightLeft = imgHeight;
+        let position = 0;
+        
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+        
+        while (heightLeft >= 0) {
+            position = heightLeft - imgHeight;
+            pdf.addPage();
+            pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+            heightLeft -= pageHeight;
+        }
+        
+        const dateFrom = $('#dateFrom').val();
+        const dateTo = $('#dateTo').val();
+        pdf.save(`KPI-Dashboard-${dateFrom}-to-${dateTo}.pdf`);
+        
+        // Show buttons and filters again
+        $('.btn, .filter-section').show();
+    }).catch(error => {
+        console.error('PDF export error:', error);
+        alert('เกิดข้อผิดพลาดในการสร้าง PDF');
+        $('.btn, .filter-section').show();
+    });
+}
+
+// Export to Excel
+function exportToExcel() {
+    if (!currentKPIData) {
+        alert('กรุณาโหลดข้อมูลก่อนส่งออก');
+        return;
+    }
+    
+    const data = currentKPIData;
+    const wb = XLSX.utils.book_new();
+    
+    // Sheet 1: Summary
+    const summaryData = [
+        ['KPI Dashboard Summary'],
+        ['Date Range', $('#dateFrom').val() + ' to ' + $('#dateTo').val()],
+        [''],
+        ['Metric', 'Value'],
+        ['Total Repairs', data.summary.total_repairs || 0],
+        ['Pending', data.summary.pending_count || 0],
+        ['In Progress', data.summary.in_progress_count || 0],
+        ['Waiting Parts', data.summary.waiting_parts_count || 0],
+        ['Completed', data.summary.completed_count || 0],
+        ['Total Cost', data.cost_stats.total_cost || 0],
+        ['MTBF (days)', data.overall_mtbf.mtbf_days || 0],
+    ];
+    const ws1 = XLSX.utils.aoa_to_sheet(summaryData);
+    XLSX.utils.book_append_sheet(wb, ws1, 'Summary');
+    
+    // Sheet 2: Frequent Machines
+    if (data.frequent_machines && data.frequent_machines.length > 0) {
+        const ws2 = XLSX.utils.json_to_sheet(data.frequent_machines);
+        XLSX.utils.book_append_sheet(wb, ws2, 'Frequent Machines');
+    }
+    
+    // Sheet 3: Department Stats
+    if (data.department_stats && data.department_stats.length > 0) {
+        const ws3 = XLSX.utils.json_to_sheet(data.department_stats);
+        XLSX.utils.book_append_sheet(wb, ws3, 'Departments');
+    }
+    
+    // Sheet 4: Technician Stats
+    if (data.technician_stats && data.technician_stats.length > 0) {
+        const ws4 = XLSX.utils.json_to_sheet(data.technician_stats);
+        XLSX.utils.book_append_sheet(wb, ws4, 'Technicians');
+    }
+    
+    // Sheet 5: MTBF Data
+    if (data.mtbf_data && data.mtbf_data.length > 0) {
+        const ws5 = XLSX.utils.json_to_sheet(data.mtbf_data);
+        XLSX.utils.book_append_sheet(wb, ws5, 'MTBF');
+    }
+    
+    // Save file
+    const dateFrom = $('#dateFrom').val();
+    const dateTo = $('#dateTo').val();
+    XLSX.writeFile(wb, `KPI-Dashboard-${dateFrom}-to-${dateTo}.xlsx`);
+}
+
+// Show status details (drill-down)
+function showStatusDetails(status, statusLabel) {
+    const dateFrom = $('#dateFrom').val();
+    const dateTo = $('#dateTo').val();
+    
+    // Create modal
+    const modalHtml = `
+        <div class="modal fade" id="statusDetailModal" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">รายละเอียด: ${statusLabel}</h5>
+                        <button type="button" class="close" data-dismiss="modal">
+                            <span>&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="text-center">
+                            <i class="fas fa-spinner fa-spin fa-2x"></i>
+                            <p>กำลังโหลดข้อมูล...</p>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">ปิด</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Remove existing modal
+    $('#statusDetailModal').remove();
+    
+    // Add and show modal
+    $('body').append(modalHtml);
+    $('#statusDetailModal').modal('show');
+    
+    // Load data via AJAX
+    $.ajax({
+        url: '../api/get_repair_details.php',
+        method: 'GET',
+        data: {
+            status: status,
+            date_from: dateFrom,
+            date_to: dateTo
+        },
+        dataType: 'json',
+        success: function(response) {
+            if (response.success && response.data) {
+                let tableHtml = `
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>รหัสเครื่อง</th>
+                                    <th>แผนก</th>
+                                    <th>ปัญหา</th>
+                                    <th>วันที่แจ้ง</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+                
+                response.data.forEach((item, index) => {
+                    const date = new Date(item.start_job).toLocaleDateString('th-TH');
+                    tableHtml += `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td><strong>${item.machine_number}</strong></td>
+                            <td>${item.department || '-'}</td>
+                            <td>${item.issue || '-'}</td>
+                            <td>${date}</td>
+                        </tr>
+                    `;
+                });
+                
+                tableHtml += `
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="text-muted mt-3"><small>จำนวนทั้งหมด: ${response.data.length} รายการ</small></p>
+                `;
+                
+                $('#statusDetailModal .modal-body').html(tableHtml);
+            } else {
+                $('#statusDetailModal .modal-body').html('<p class="text-danger">ไม่สามารถโหลดข้อมูลได้</p>');
+            }
+        },
+        error: function() {
+            $('#statusDetailModal .modal-body').html('<p class="text-danger">เกิดข้อผิดพลาดในการโหลดข้อมูล</p>');
+        }
+    });
+}
+
+// Show machine details when clicking on table rows
+$(document).on('click', '#frequentMachinesTable tbody tr, #mtbfTable tbody tr', function() {
+    const machineNumber = $(this).find('td:eq(1) strong').text();
+    if (machineNumber && machineNumber !== '-') {
+        showMachineHistory(machineNumber);
+    }
+});
+
+// Show machine repair history
+function showMachineHistory(machineNumber) {
+    const modalHtml = `
+        <div class="modal fade" id="machineHistoryModal" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-xl" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">ประวัติการซ่อม: ${machineNumber}</h5>
+                        <button type="button" class="close" data-dismiss="modal">
+                            <span>&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="text-center">
+                            <i class="fas fa-spinner fa-spin fa-2x"></i>
+                            <p>กำลังโหลดข้อมูล...</p>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">ปิด</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    $('#machineHistoryModal').remove();
+    $('body').append(modalHtml);
+    $('#machineHistoryModal').modal('show');
+    
+    $.ajax({
+        url: '../api/get_machine_history.php',
+        method: 'GET',
+        data: { machine_number: machineNumber },
+        dataType: 'json',
+        success: function(response) {
+            if (response.success && response.data) {
+                let html = `
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <div class="card">
+                                <div class="card-body text-center">
+                                    <h6>จำนวนครั้งทั้งหมด</h6>
+                                    <h3 class="text-primary">${response.data.length}</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card">
+                                <div class="card-body text-center">
+                                    <h6>ซ่อมเสร็จ</h6>
+                                    <h3 class="text-success">${response.data.filter(r => r.status == '40').length}</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card">
+                                <div class="card-body text-center">
+                                    <h6>ค่าใช้จ่ายรวม</h6>
+                                    <h3 class="text-danger">${response.total_cost ? response.total_cost.toLocaleString() : '0'} ฿</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card">
+                                <div class="card-body text-center">
+                                    <h6>เวลารวม</h6>
+                                    <h3 class="text-warning">${response.total_hours ? response.total_hours.toFixed(1) : '0'} ชม.</h3>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>วันที่</th>
+                                    <th>ปัญหา</th>
+                                    <th>สถานะ</th>
+                                    <th>ช่าง</th>
+                                    <th>เวลา (ชม.)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+                
+                response.data.forEach((item, index) => {
+                    const date = new Date(item.start_job).toLocaleDateString('th-TH');
+                    const statusBadge = item.status == '40' ? 'success' : 'warning';
+                    const statusText = item.status == '40' ? 'เสร็จสิ้น' : 'กำลังดำเนินการ';
+                    
+                    html += `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td>${date}</td>
+                            <td>${item.issue || '-'}</td>
+                            <td><span class="badge badge-${statusBadge}">${statusText}</span></td>
+                            <td>${item.handled_by || '-'}</td>
+                            <td>${item.work_hours ? parseFloat(item.work_hours).toFixed(1) : '-'}</td>
+                        </tr>
+                    `;
+                });
+                
+                html += `
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+                
+                $('#machineHistoryModal .modal-body').html(html);
+            } else {
+                $('#machineHistoryModal .modal-body').html('<p class="text-danger">ไม่พบข้อมูล</p>');
+            }
+        },
+        error: function() {
+            $('#machineHistoryModal .modal-body').html('<p class="text-danger">เกิดข้อผิดพลาด</p>');
+        }
+    });
+}
+
+// ==================== Threshold Settings Functions ====================
+
+// Default thresholds
+const DEFAULT_THRESHOLDS = {
+    mtbf: 7,              // วัน
+    mttr: 24,             // ชั่วโมง
+    successRate: 70,      // %
+    pending: 10,          // รายการ
+    oee: 60,              // %
+    responseTime: 60,     // นาที
+    downtime: 100         // ชั่วโมง
+};
+
+// Get thresholds from localStorage or use defaults
+function getThresholds() {
+    const stored = localStorage.getItem('kpi_thresholds');
+    if (stored) {
+        try {
+            return JSON.parse(stored);
+        } catch (e) {
+            console.error('Error parsing thresholds:', e);
+            return DEFAULT_THRESHOLDS;
+        }
+    }
+    return DEFAULT_THRESHOLDS;
+}
+
+// Show threshold settings modal
+function showThresholdSettings() {
+    const thresholds = getThresholds();
+    
+    // Populate form with current values
+    $('#mtbfThreshold').val(thresholds.mtbf);
+    $('#mttrThreshold').val(thresholds.mttr);
+    $('#successRateThreshold').val(thresholds.successRate);
+    $('#pendingThreshold').val(thresholds.pending);
+    $('#oeeThreshold').val(thresholds.oee);
+    $('#responseTimeThreshold').val(thresholds.responseTime);
+    $('#downtimeThreshold').val(thresholds.downtime);
+    
+    $('#thresholdSettingsModal').modal('show');
+}
+
+// Save threshold settings
+function saveThresholds() {
+    const thresholds = {
+        mtbf: parseFloat($('#mtbfThreshold').val()) || DEFAULT_THRESHOLDS.mtbf,
+        mttr: parseFloat($('#mttrThreshold').val()) || DEFAULT_THRESHOLDS.mttr,
+        successRate: parseFloat($('#successRateThreshold').val()) || DEFAULT_THRESHOLDS.successRate,
+        pending: parseInt($('#pendingThreshold').val()) || DEFAULT_THRESHOLDS.pending,
+        oee: parseFloat($('#oeeThreshold').val()) || DEFAULT_THRESHOLDS.oee,
+        responseTime: parseFloat($('#responseTimeThreshold').val()) || DEFAULT_THRESHOLDS.responseTime,
+        downtime: parseFloat($('#downtimeThreshold').val()) || DEFAULT_THRESHOLDS.downtime
+    };
+    
+    // Validate values
+    if (thresholds.mtbf < 1 || thresholds.mtbf > 365) {
+        alert('MTBF ต้องอยู่ระหว่าง 1-365 วัน');
+        return;
+    }
+    if (thresholds.mttr < 1 || thresholds.mttr > 720) {
+        alert('MTTR ต้องอยู่ระหว่าง 1-720 ชั่วโมง');
+        return;
+    }
+    if (thresholds.successRate < 0 || thresholds.successRate > 100) {
+        alert('Success Rate ต้องอยู่ระหว่าง 0-100%');
+        return;
+    }
+    if (thresholds.oee < 0 || thresholds.oee > 100) {
+        alert('OEE ต้องอยู่ระหว่าง 0-100%');
+        return;
+    }
+    
+    // Save to localStorage
+    localStorage.setItem('kpi_thresholds', JSON.stringify(thresholds));
+    
+    // Show success message
+    alert('✅ บันทึกการตั้งค่าเรียบร้อยแล้ว!\n\nระบบจะใช้ค่าใหม่ในการแจ้งเตือนทันที');
+    
+    // Close modal
+    $('#thresholdSettingsModal').modal('hide');
+    
+    // Re-check alerts with new thresholds
+    if (currentKPIData) {
+        checkThresholdAlerts(currentKPIData);
+    }
+}
+
+// Reset to default thresholds
+function resetThresholds() {
+    if (confirm('คุณต้องการรีเซ็ตค่ากลับเป็นค่าเริ่มต้นใช่หรือไม่?')) {
+        localStorage.removeItem('kpi_thresholds');
+        
+        // Reload form with defaults
+        $('#mtbfThreshold').val(DEFAULT_THRESHOLDS.mtbf);
+        $('#mttrThreshold').val(DEFAULT_THRESHOLDS.mttr);
+        $('#successRateThreshold').val(DEFAULT_THRESHOLDS.successRate);
+        $('#pendingThreshold').val(DEFAULT_THRESHOLDS.pending);
+        $('#oeeThreshold').val(DEFAULT_THRESHOLDS.oee);
+        $('#responseTimeThreshold').val(DEFAULT_THRESHOLDS.responseTime);
+        $('#downtimeThreshold').val(DEFAULT_THRESHOLDS.downtime);
+        
+        alert('✅ รีเซ็ตค่ากลับเป็นค่าเริ่มต้นเรียบร้อยแล้ว!');
+    }
+}
+
+// Display current thresholds in console for debugging
+function showCurrentThresholds() {
+    const thresholds = getThresholds();
+    console.log('📊 Current Alert Thresholds:', thresholds);
+    return thresholds;
 }

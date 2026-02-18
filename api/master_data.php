@@ -50,7 +50,7 @@ function listItems($conn, $type) {
         return;
     }
     
-    $sql = "SELECT id, name, is_active, created_at FROM $table ORDER BY created_at DESC";
+    $sql = "SELECT id, name, is_active, created_at, created_by, updated_at, updated_by FROM $table ORDER BY created_at DESC";
     
     $stmt = $conn->prepare($sql);
     $stmt->execute();
@@ -86,6 +86,7 @@ function saveItem($conn, $type) {
     
     $id = $_POST['id'] ?? 0;
     $name = trim($_POST['name'] ?? '');
+    $current_user = $_SESSION['technician_username'] ?? 'system';
     
     if (empty($name)) {
         json_response(false, 'กรุณากรอกชื่อ');
@@ -97,8 +98,8 @@ function saveItem($conn, $type) {
         
         if ($id > 0) {
             // Update
-            $sql = "UPDATE $table SET name = :name WHERE id = :id";
-            $params = [':id' => $id, ':name' => $name];
+            $sql = "UPDATE $table SET name = :name, updated_by = :updated_by, updated_at = NOW() WHERE id = :id";
+            $params = [':id' => $id, ':name' => $name, ':updated_by' => $current_user];
             
             $stmt = $conn->prepare($sql);
             $stmt->execute($params);
@@ -108,8 +109,8 @@ function saveItem($conn, $type) {
             
         } else {
             // Insert
-            $sql = "INSERT INTO $table (name) VALUES (:name)";
-            $params = [':name' => $name];
+            $sql = "INSERT INTO $table (name, created_by) VALUES (:name, :created_by)";
+            $params = [':name' => $name, ':created_by' => $current_user];
             
             $stmt = $conn->prepare($sql);
             $stmt->execute($params);
@@ -152,9 +153,10 @@ function toggleStatus($conn, $type, $id) {
         return;
     }
     
-    $sql = "UPDATE $table SET is_active = 1 - is_active WHERE id = :id";
+    $current_user = $_SESSION['technician_username'] ?? 'system';
+    $sql = "UPDATE $table SET is_active = 1 - is_active, updated_by = :updated_by, updated_at = NOW() WHERE id = :id";
     $stmt = $conn->prepare($sql);
-    $stmt->execute([':id' => $id]);
+    $stmt->execute([':id' => $id, ':updated_by' => $current_user]);
     
     json_response(true, 'เปลี่ยนสถานะสำเร็จ');
 }

@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="google" content="notranslate">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>Monitor - ระบบแจ้งซ่อมเครื่องจักร</title>
     
@@ -16,6 +17,10 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     
     <style>
+        html {
+            font-size: 150%;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -27,6 +32,14 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             overflow-x: hidden;
+
+            /* -- เพิ่ม 2 บรรทัดนี้เพื่อซ่อน Scrollbar สำหรับ Firefox, IE และ Edge -- */
+            -ms-overflow-style: none; 
+            scrollbar-width: none;
+        }
+        /* -- เพิ่มบล็อกนี้ต่อท้ายลงไป เพื่อซ่อน Scrollbar สำหรับ Chromium (ตัวที่คุณใช้บน Pi) และ Chrome -- */
+        body::-webkit-scrollbar {
+            display: none;
         }
         
         .monitor-header {
@@ -401,16 +414,45 @@
         .repair-card {
             animation: fadeInUp 0.5s ease;
         }
+
+        /* New item notification banner */
+        #new-item-banner {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #ff6b35, #f7c59f);
+            color: white;
+            padding: 14px 30px;
+            border-radius: 30px;
+            font-size: 1rem;
+            font-weight: 700;
+            box-shadow: 0 6px 24px rgba(255, 107, 53, 0.5);
+            z-index: 9999;
+            /* เวลาปรากฏของแบนเนอร์ */
+            animation: bannerPop 1.5s ease;
+            white-space: nowrap;
+        }
+        @keyframes bannerPop {
+            from { opacity: 0; transform: translateX(-50%) scale(0.8); }
+            to   { opacity: 1; transform: translateX(-50%) scale(1); }
+        }
     </style>
 </head>
 <body>
 
     <div class="monitor-header">
-        <a href="../index.php" class="btn-home">
+        <!-- <a href="../index.php" class="btn-home">
             <i class="fas fa-home"></i> หน้าแรก
-        </a>
-        <h1><i class="fas fa-tools"></i> ระบบแจ้งซ่อมเครื่องจักร - MONITOR</h1>
+        </a> -->
+        <h1><a href="../index.php" style="color: white; text-decoration: none;"><i class="fas fa-tools"></i> ระบบแจ้งซ่อมเครื่องจักร - MONITOR</a></h1>
         <div class="datetime" id="datetime"></div>
+    </div>
+
+    <!-- New item notification banner -->
+    <div id="new-item-banner">
+        <i class="fas fa-bell"></i> มีรายการแจ้งซ่อมใหม่!
     </div>
     
     <div class="stats-bar" id="stats-bar">
@@ -466,38 +508,46 @@
             updateDateTime();
             setInterval(updateDateTime, 1000);
             
-            // Track previous item count for sound notification
-            let previousItemCount = 0;
-            
-            // Create audio element
-            // const notificationAudio = new Audio('../assets/sounds/notification.wav');
-            const notificationAudio = new Audio('../assets/sounds/tiengdong_com.mp3');
-            notificationAudio.volume = 1.0;
-            notificationAudio.preload = 'auto';
-            
+            // ---- Notification Sound System ----
+            // Kiosk mode: ใช้ --autoplay-policy=no-user-gesture-required ใน Chromium
+            let soundEnabled = true;           // เปิดเสียงไว้เป็นค่าเริ่มต้น
+            let knownItemIds = new Set();      // เก็บ ID รายการที่รู้จักแล้ว
+            let isFirstLoad = true;            // โหลดครั้งแรกยังไม่แจ้งเตือน
+
+            let _soundPlaying = false;
             function playNotificationSound() {
+                if (!soundEnabled || _soundPlaying) return;
                 try {
-                    // Play the beep 3 times
                     let count = 0;
+                    _soundPlaying = true;
                     const playBeep = () => {
                         if (count < 3) {
-                            // const audio = new Audio('../assets/sounds/notification.wav');
                             const audio = new Audio('../assets/sounds/tiengdong_com.mp3');
                             audio.volume = 1.0;
-                            audio.play().then(() => {
-                                console.log('Beep played successfully');
-                            }).catch(e => {
+                            audio.onended = () => {
+                                count++;
+                                setTimeout(playBeep, 200); // หน่วงเล็กน้อยระหว่างเสียง
+                            };
+                            audio.play().catch(e => {
                                 console.error('Audio play error:', e);
+                                _soundPlaying = false;
                             });
-                            count++;
-                            setTimeout(playBeep, 400);
+                        } else {
+                            _soundPlaying = false;
                         }
                     };
                     playBeep();
-                    console.log('Playing notification sound');
                 } catch (e) {
                     console.error('Error playing sound:', e);
+                    _soundPlaying = false;
                 }
+            }
+
+            function showNewItemBanner(count) {
+                const $banner = $('#new-item-banner');
+                $banner.html('<i class="fas fa-bell"></i> มีรายการแจ้งซ่อมใหม่ ' + count + ' รายการ!');
+                $banner.fadeIn(300);
+                setTimeout(() => $banner.fadeOut(600), 4000);
             }
             
             // Load repair data
@@ -508,17 +558,27 @@
                     dataType: 'json',
                     success: function(response) {
                         if (response.success) {
-                            const currentItemCount = response.data.length;
-                            
-                            // Check if there are new items (count increased)
-                            if (previousItemCount > 0 && currentItemCount > previousItemCount) {
-                                console.log('New items detected:', currentItemCount - previousItemCount);
-                                playNotificationSound();
+                            if (isFirstLoad) {
+                                // โหลดครั้งแรก: บันทึก ID ทั้งหมดโดยไม่แจ้งเตือน
+                                response.data.forEach(function(item) {
+                                    knownItemIds.add(String(item.id));
+                                });
+                                isFirstLoad = false;
+                            } else {
+                                // โหลดครั้งถัดไป: ตรวจหา ID ใหม่ที่ยังไม่รู้จัก
+                                const newItems = response.data.filter(function(item) {
+                                    return !knownItemIds.has(String(item.id));
+                                });
+                                if (newItems.length > 0) {
+                                    console.log('New items detected:', newItems.length, newItems.map(i => i.id));
+                                    newItems.forEach(function(item) {
+                                        knownItemIds.add(String(item.id));
+                                    });
+                                    showNewItemBanner(newItems.length);
+                                    playNotificationSound();
+                                }
                             }
-                            
-                            // Update previous count
-                            previousItemCount = currentItemCount;
-                            
+
                             displayRepairCards(response.data);
                             updateStats(response.stats);
                         } else {
@@ -543,13 +603,13 @@
                         <table>
                             <thead>
                                 <tr>
-                                    <th style="width: 60px;">ID</th>
+                                    <!--<th style="width: 50px;">ID</th>-->
                                     <th style="width: 140px;">เลขที่เอกสาร</th>
-                                    <th style="width: 120px;">แผนก</th>
+                                    <th style="width: 100px;">แผนก</th>
                                     <th style="width: 120px;">เครื่องจักร</th>
-                                    <th>อาการเสีย</th>
+                                    <th style="width: 280px;">อาการเสีย</th>
                                     <th style="width: 110px;">ผู้แจ้ง</th>
-                                    <th style="width: 110px;">ผู้ดำเนินการ</th>
+                                    <!--<th style="width: 110px;">ผู้ดำเนินการ</th>-->
                                     <!--<th>รายงาน MT</th>-->
                                     <th style="width: 120px;">เวลาแจ้ง</th>
                                     <th style="width: 100px;">เวลาที่ผ่านไป</th>
@@ -573,7 +633,7 @@
                     
                     html += `
                         <tr class="${rowClass}">
-                            <td style="text-align: center; font-weight: 700; font-size: 1rem;">#${item.id}</td>
+                            <!--<td style="text-align: center; font-weight: 700; font-size: 1rem;">#${item.id}</td>-->
                             <td style="text-align: center; font-weight: 700; font-size: 0.95rem; color: #007bff;">
                                 <i class="fas fa-file-alt"></i> ${escapeHtml(item.document_no || '-')}
                             </td>
@@ -583,13 +643,13 @@
                                     <i class="fas fa-cog"></i> ${escapeHtml(item.machine_number)}
                                 </strong>
                             </td>
-                            <td style="font-size: 0.9rem;">${escapeHtml(item.issue)}</td>
+                            <td style="font-size: 0.9rem; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHtml(item.issue)}">${escapeHtml(item.issue)}</td>
                             <td style="text-align: center; font-weight: 600; font-size: 0.85rem;">
                                 <i class="fas fa-user"></i> ${escapeHtml(item.reported_by || '-')}
                             </td>
-                            <td style="text-align: center; font-weight: 600; font-size: 0.85rem; color: #28a745;">
+                            <!--<td style="text-align: center; font-weight: 600; font-size: 0.85rem; color: #28a745;">
                                 <i class="fas fa-user-cog"></i> ${escapeHtml(item.handled_by || '-')}
-                            </td>
+                            </td>-->
                             <!--<td style="color: #856404;">${item.mt_report ? escapeHtml(item.mt_report) : '-'}</td>-->
                             <td style="text-align: center; font-size: 0.85rem;">
                                 <i class="fas fa-clock"></i> ${item.start_job}

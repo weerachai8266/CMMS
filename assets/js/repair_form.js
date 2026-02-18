@@ -381,6 +381,85 @@ $(document).ready(function() {
     });
 
     /**
+     * Cancel repair button handler
+     */
+    $(document).on('click', '.btn-cancel-repair', function() {
+        const $btn = $(this);
+        const id = $btn.data('id');
+        
+        // ถามชื่อผู้ยกเลิก
+        const cancelledBy = prompt('กรุณาระบุชื่อผู้ยกเลิก:');
+        
+        // ถ้าผู้ใช้กด Cancel
+        if (cancelledBy === null) {
+            return;
+        }
+        
+        // ถ้าไม่กรอกชื่อ
+        if (cancelledBy.trim() === '') {
+            showMessage('กรุณาระบุชื่อผู้ยกเลิก', 'warning');
+            return;
+        }
+        
+        // ถามเหตุผลการยกเลิก
+        const reason = prompt('กรุณาระบุเหตุผลการยกเลิกใบแจ้งซ่อม:');
+        
+        // ถ้าผู้ใช้กด Cancel
+        if (reason === null) {
+            return;
+        }
+        
+        // ถ้าไม่กรอกเหตุผล
+        if (reason.trim() === '') {
+            showMessage('กรุณาระบุเหตุผลการยกเลิก', 'warning');
+            return;
+        }
+        
+        // ยืนยันการยกเลิก
+        if (!confirm('คุณต้องการยกเลิกใบแจ้งซ่อมนี้ใช่หรือไม่?\n\nผู้ยกเลิก: ' + cancelledBy.trim() + '\nเหตุผล: ' + reason.trim())) {
+            return;
+        }
+        
+        // Disable button
+        $btn.prop('disabled', true);
+        
+        $.ajax({
+            url: '../api/cancel_repair.php',
+            type: 'POST',
+            data: JSON.stringify({ 
+                id: id,
+                cancelled_by: cancelledBy.trim(),
+                reason: reason.trim()
+            }),
+            contentType: 'application/json',
+            dataType: 'json',
+            success: function(response) {
+                if (response.success) {
+                    showMessage(response.message, 'success');
+                    loadRepairData();
+                } else {
+                    showMessage(response.message, 'error');
+                    $btn.prop('disabled', false);
+                }
+            },
+            error: function(xhr, status, error) {
+                let errorMsg = 'เกิดข้อผิดพลาดในการยกเลิกใบแจ้งซ่อม';
+                try {
+                    const errorResponse = JSON.parse(xhr.responseText);
+                    if (errorResponse.message) {
+                        errorMsg = errorResponse.message;
+                    }
+                } catch(e) {
+                    // Response is not JSON
+                }
+                showMessage(errorMsg, 'error');
+                console.error('Cancel error:', error);
+                $btn.prop('disabled', false);
+            }
+        });
+    });
+
+    /**
      * Filter change handlers
      */
     $('#filter_department, #filter_machine, #filter_reported_by, #filter_status').on('change keyup', function() {

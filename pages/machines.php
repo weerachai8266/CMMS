@@ -106,11 +106,13 @@ require_once '../config/config.php';
                     <i class="fas fa-database"></i> จัดการข้อมูลพื้นฐาน
                 </a>
             </li>
+            <?php if ($_SESSION['user_role'] === 'admin' || $_SESSION['user_role'] === 'manager' || $_SESSION['user_role'] === 'staff'): ?>
             <li class="nav-item">
-                <a class="nav-link" id="reserve3-tab" data-toggle="tab" href="#reserve3" role="tab">
-                    <i class="fas fa-database"></i> จัดการสำรอง 3
+                <a class="nav-link" id="users-tab" data-toggle="tab" href="#users" role="tab">
+                    <i class="fas fa-users"></i> จัดการผู้ใช้งานระบบ
                 </a>
             </li>
+            <?php endif; ?>
         </ul>
 
         <!-- Tab Content -->
@@ -139,6 +141,7 @@ require_once '../config/config.php';
                                 <option value="20">รอดำเนินการ</option>
                                 <option value="30">รออะไหล่</option>
                                 <option value="40">ซ่อมเสร็จสิ้น</option>
+                                <option value="50">ยกเลิก</option>
                             </select>
                         </div>
                         <div class="col-md-2">
@@ -315,12 +318,14 @@ require_once '../config/config.php';
                                     <tr>
                                         <th width="80">ID</th>
                                         <th>ชื่อบริษัท</th>
+                                        <th width="120">สร้างโดย</th>
+                                        <th width="120">แก้ไขโดย</th>
                                         <th width="100">สถานะ</th>
                                         <th width="150">จัดการ</th>
                                     </tr>
                                 </thead>
                                 <tbody id="companyTableBody">
-                                    <tr><td colspan="4" class="text-center"><i class="fas fa-spinner fa-spin"></i> กำลังโหลด...</td></tr>
+                                    <tr><td colspan="6" class="text-center"><i class="fas fa-spinner fa-spin"></i> กำลังโหลด...</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -339,12 +344,14 @@ require_once '../config/config.php';
                                     <tr>
                                         <th width="80">ID</th>
                                         <th>ชื่อสาขา</th>
+                                        <th width="120">สร้างโดย</th>
+                                        <th width="120">แก้ไขโดย</th>
                                         <th width="100">สถานะ</th>
                                         <th width="150">จัดการ</th>
                                     </tr>
                                 </thead>
                                 <tbody id="branchTableBody">
-                                    <tr><td colspan="4" class="text-center"><i class="fas fa-spinner fa-spin"></i> กำลังโหลด...</td></tr>
+                                    <tr><td colspan="6" class="text-center"><i class="fas fa-spinner fa-spin"></i> กำลังโหลด...</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -363,12 +370,14 @@ require_once '../config/config.php';
                                     <tr>
                                         <th width="80">ID</th>
                                         <th>ชื่อฝ่าย</th>
+                                        <th width="120">สร้างโดย</th>
+                                        <th width="120">แก้ไขโดย</th>
                                         <th width="100">สถานะ</th>
                                         <th width="150">จัดการ</th>
                                     </tr>
                                 </thead>
                                 <tbody id="divisionTableBody">
-                                    <tr><td colspan="4" class="text-center"><i class="fas fa-spinner fa-spin"></i> กำลังโหลด...</td></tr>
+                                    <tr><td colspan="6" class="text-center"><i class="fas fa-spinner fa-spin"></i> กำลังโหลด...</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -387,12 +396,14 @@ require_once '../config/config.php';
                                     <tr>
                                         <th width="80">ID</th>
                                         <th>ชื่อหน่วยงาน</th>
+                                        <th width="120">สร้างโดย</th>
+                                        <th width="120">แก้ไขโดย</th>
                                         <th width="100">สถานะ</th>
                                         <th width="150">จัดการ</th>
                                     </tr>
                                 </thead>
                                 <tbody id="departmentTableBody">
-                                    <tr><td colspan="4" class="text-center"><i class="fas fa-spinner fa-spin"></i> กำลังโหลด...</td></tr>
+                                    <tr><td colspan="6" class="text-center"><i class="fas fa-spinner fa-spin"></i> กำลังโหลด...</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -411,16 +422,20 @@ require_once '../config/config.php';
                                     <tr>
                                         <th width="80">ID</th>
                                         <th>อาการเสีย</th>
+                                        <th width="120">สร้างโดย</th>
+                                        <th width="120">แก้ไขโดย</th>
                                         <th width="100">สถานะ</th>
                                         <th width="150">จัดการ</th>
                                     </tr>
                                 </thead>
                                 <tbody id="issueTableBody">
-                                    <tr><td colspan="4" class="text-center"><i class="fas fa-spinner fa-spin"></i> กำลังโหลด...</td></tr>
+                                    <tr><td colspan="6" class="text-center"><i class="fas fa-spinner fa-spin"></i> กำลังโหลด...</td></tr>
                                 </tbody>
                             </table>
                         </div>
                     </div>
+
+
                 </div>
             </div>
 
@@ -528,13 +543,50 @@ require_once '../config/config.php';
                 </div>
             </div>
 
-            <!-- Tab 5: จัดการสำรอง 3 -->
-            <div class="tab-pane fade" id="reserve3" role="tabpanel">
-                <h4><i class="fas fa-database"></i> จัดการสำรอง 3</h4>
-                <div class="alert alert-info">
-                    <i class="fas fa-info-circle"></i> หน้าสำรองสำหรับการพัฒนาในอนาคต
+            <!-- Tab 5: จัดการผู้ใช้งานระบบ -->
+            <?php if ($_SESSION['user_role'] === 'admin' || $_SESSION['user_role'] === 'manager' || $_SESSION['user_role'] === 'staff'): ?>
+            <div class="tab-pane fade" id="users" role="tabpanel">
+                <h4><i class="fas fa-users"></i> จัดการผู้ใช้งานระบบ</h4>
+                
+                <div class="card">
+                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-list"></i> รายการผู้ใช้</h5>
+                        <button class="btn btn-light btn-sm" onclick="openUserModal()">
+                            <i class="fas fa-plus"></i> เพิ่มผู้ใช้ใหม่
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover">
+                                <thead class="thead-dark">
+                                    <tr>
+                                        <th width="60">ID</th>
+                                        <th>Username</th>
+                                        <th>ชื่อ-นามสกุล</th>
+                                        <th>Email</th>
+                                        <th>เบอร์โทร</th>
+                                        <th>สิทธิ์</th>
+                                        <th>แผนก</th>
+                                        <th>สาขา</th>
+                                        <th>ตำแหน่ง</th>
+                                        <th width="100">สถานะ</th>
+                                        <th width="100">Login ล่าสุด</th>
+                                        <th width="200">จัดการ</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="usersTableBody">
+                                    <tr>
+                                        <td colspan="12" class="text-center">
+                                            <i class="fas fa-spinner fa-spin"></i> กำลังโหลดข้อมูล...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
+            <?php endif; ?>
         </div>
     </div>
 
@@ -982,12 +1034,161 @@ require_once '../config/config.php';
         </div>
     </div>
 
+    <!-- Modal เพิ่ม/แก้ไข User -->
+    <div class="modal fade" id="userModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="userModalTitle">
+                        <i class="fas fa-user-plus"></i> เพิ่มผู้ใช้ใหม่
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <form id="userForm">
+                    <div class="modal-body">
+                        <input type="hidden" id="user_id" name="user_id">
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Username <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="username" name="username" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>รหัสผ่าน <span class="text-danger" id="password_required">*</span></label>
+                                    <input type="password" class="form-control" id="password" name="password">
+                                    <small class="form-text text-muted">ปล่อยว่างไว้ถ้าไม่ต้องการเปลี่ยน (เฉพาะแก้ไข)</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>ชื่อ-นามสกุล <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="full_name" name="full_name" required>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Email</label>
+                                    <input type="email" class="form-control" id="email" name="email">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>เบอร์โทร</label>
+                                    <input type="text" class="form-control" id="phone" name="phone">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>สิทธิ์การใช้งาน <span class="text-danger">*</span></label>
+                                    <select class="form-control" id="role" name="role" required>
+                                        <option value="viewer">ผู้ดู (Viewer)</option>
+                                        <option value="staff">เจ้าหน้าที่ (Staff)</option>
+                                        <option value="maintenance">ช่างซ่อม (Maintenance)</option>
+                                        <option value="technician">ช่างเทคนิค (Technician)</option>
+                                        <option value="engineer">วิศวกร (Engineer)</option>
+                                        <option value="leader">ผู้นำ (Leader)</option>
+                                        <option value="supervisor">หัวหน้างาน (Supervisor)</option>
+                                        <option value="manager">ผู้จัดการ (Manager)</option>
+                                        <!-- <option value="admin">ผู้ดูแลระบบ (Admin)</option> -->
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>รหัสพนักงาน</label>
+                                    <input type="text" class="form-control" id="employee_id" name="employee_id">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>แผนก</label>
+                                    <input type="text" class="form-control" id="department" name="department">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>สาขา</label>
+                                    <input type="text" class="form-control" id="branch" name="branch">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>ตำแหน่ง</label>
+                                    <input type="text" class="form-control" id="position" name="position">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                            <i class="fas fa-times"></i> ยกเลิก
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> บันทึก
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Reset Password -->
+    <div class="modal fade" id="resetPasswordModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-warning text-dark">
+                    <h5 class="modal-title">
+                        <i class="fas fa-key"></i> รีเซ็ตรหัสผ่าน
+                    </h5>
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i> 
+                        คุณต้องการรีเซ็ตรหัสผ่านของผู้ใช้ <strong id="reset_username"></strong> หรือไม่?
+                    </div>
+                    <p>รหัสผ่านใหม่จะถูกตั้งเป็น: <code class="text-danger">password123</code></p>
+                    <p class="text-muted"><small>ผู้ใช้ควรเปลี่ยนรหัสผ่านทันทีหลังจาก login</small></p>
+                    <input type="hidden" id="reset_user_id">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                        <i class="fas fa-times"></i> ยกเลิก
+                    </button>
+                    <button type="button" class="btn btn-warning" onclick="confirmResetPassword()">
+                        <i class="fas fa-key"></i> ยืนยันรีเซ็ต
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        // ส่ง role ของ user ปัจจุบันให้ JavaScript
+        var currentUserRole = '<?php echo $_SESSION['user_role'] ?? 'viewer'; ?>';
+    </script>
     <script src="../assets/js/master_data.js"></script>
     <script src="../assets/js/machines.js"></script>
     <script src="../assets/js/machine_history.js"></script>
+    <script src="../assets/js/users.js"></script>
     <script>
         // อัพเดทตัวอย่างเลขเอกสารตามประเภทที่เลือก
         function updateDocumentNoPrefix() {
@@ -1055,6 +1256,9 @@ require_once '../config/config.php';
                                     break;
                                 case 40:
                                     statusBadge = '<span class="badge badge-success">ซ่อมเสร็จสิ้น</span>';
+                                    break;
+                                case 50:
+                                    statusBadge = '<span class="badge badge-dark">ยกเลิก</span>';
                                     break;
                                 default:
                                     statusBadge = '<span class="badge badge-secondary">' + repair.status + '</span>';
@@ -1148,6 +1352,13 @@ require_once '../config/config.php';
             $('#division-tab').on('click', function() { loadMasterData('division'); });
             $('#department-tab').on('click', function() { loadMasterData('department'); });
             $('#issue-tab').on('click', function() { loadMasterData('issue'); });
+            
+            // Load users when users tab is shown
+            $('#users-tab').on('shown.bs.tab', function() {
+                if (typeof loadUsers === 'function') {
+                    loadUsers();
+                }
+            });
         });
 
         // ========== Master Data Functions ==========
@@ -1157,7 +1368,7 @@ require_once '../config/config.php';
             console.log('Loading master data for type:', type);
             currentMasterType = type;
             const tbody = $('#' + type + 'TableBody');
-            tbody.html('<tr><td colspan="4" class="text-center"><i class="fas fa-spinner fa-spin"></i> กำลังโหลด...</td></tr>');
+            tbody.html('<tr><td colspan="6" class="text-center"><i class="fas fa-spinner fa-spin"></i> กำลังโหลด...</td></tr>');
             
             $.ajax({
                 url: '../api/master_data.php',
@@ -1168,12 +1379,12 @@ require_once '../config/config.php';
                     if (response.success) {
                         displayMasterData(type, response.data);
                     } else {
-                        tbody.html('<tr><td colspan="4" class="text-center text-danger">' + response.message + '</td></tr>');
+                        tbody.html('<tr><td colspan="6" class="text-center text-danger">' + response.message + '</td></tr>');
                     }
                 },
                 error: function(xhr, status, error) {
                     console.error('Error loading master data for', type, ':', error);
-                    tbody.html('<tr><td colspan="4" class="text-center text-danger">เกิดข้อผิดพลาดในการโหลดข้อมูล</td></tr>');
+                    tbody.html('<tr><td colspan="6" class="text-center text-danger">เกิดข้อผิดพลาดในการโหลดข้อมูล</td></tr>');
                 }
             });
         }
@@ -1183,7 +1394,7 @@ require_once '../config/config.php';
             let html = '';
             
             if (data.length === 0) {
-                tbody.html('<tr><td colspan="4" class="text-center">ไม่มีข้อมูล</td></tr>');
+                tbody.html('<tr><td colspan="6" class="text-center">ไม่มีข้อมูล</td></tr>');
                 return;
             }
             
@@ -1195,6 +1406,8 @@ require_once '../config/config.php';
                 html += '<tr>';
                 html += '<td class="text-center">' + item.id + '</td>';
                 html += '<td>' + (item.name || '-') + '</td>';
+                html += '<td class="text-center"><small>' + (item.created_by || '-') + '</small></td>';
+                html += '<td class="text-center"><small>' + (item.updated_by || '-') + '</small></td>';
                 html += '<td class="text-center">' + statusBadge + '</td>';
                 html += '<td class="text-center">';
                 html += '<button class="btn btn-sm btn-primary" onclick="editMasterItem(\'' + type + '\', ' + item.id + ')" title="แก้ไข"><i class="fas fa-edit"></i></button> ';

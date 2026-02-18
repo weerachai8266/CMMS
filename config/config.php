@@ -44,6 +44,7 @@ define('STATUS_REJECTED', 11);           // ไม่อนุมัติ
 define('STATUS_PENDING', 20);            // รอดำเนินการ
 define('STATUS_WAITING_PARTS', 30);      // รออะไหล่
 define('STATUS_COMPLETED', 40);          // ซ่อมเสร็จสิ้น
+define('STATUS_CANCELLED', 50);          // ยกเลิก
 
 /**
  * Get status text in Thai
@@ -62,6 +63,8 @@ function get_status_text($status_code) {
             return 'รออะไหล่';
         case STATUS_COMPLETED:
             return 'ซ่อมเสร็จสิ้น';
+        case STATUS_CANCELLED:
+            return 'ยกเลิก';
         default:
             return 'ไม่ทราบสถานะ';
     }
@@ -84,6 +87,8 @@ function get_status_badge_class($status_code) {
             return 'badge-info';
         case STATUS_COMPLETED:
             return 'badge-success';
+        case STATUS_CANCELLED:
+            return 'badge-secondary';
         default:
             return 'badge-dark';
     }
