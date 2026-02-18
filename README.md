@@ -29,14 +29,14 @@ completedRepairs / totalRepairs × 100
 
 ### 2. MTTR — Mean Time To Repair (เวลาเฉลี่ยในการซ่อม)
 
-$$\text{MTTR} = \frac{\sum(\text{end\_job} - \text{start\_job})}{\text{จำนวนรายการ}} \quad \text{(หน่วย: ชั่วโมง)}$$
+$$\text{MTTR} = \frac{\sum(\text{end\_job} - \text{approved\_at})}{\text{จำนวนรายการ}} \quad \text{(หน่วย: ชั่วโมง)}$$
 
 ```sql
-AVG(TIMESTAMPDIFF(HOUR, start_job, end_job))
+AVG(TIMESTAMPDIFF(HOUR, approved_at, end_job))
 ```
 
 - **แหล่งข้อมูล:** `mt_repair`
-- **หมายเหตุ:** นับเฉพาะรายการที่มีทั้ง `start_job` และ `end_job`
+- **หมายเหตุ:** นับตั้งแต่วันที่ **อนุมัติ** (`approved_at`) จนถึงเสร็จงาน (`end_job`) เพื่อสะท้อนเวลาซ่อมจริง (ไม่รวมเวลารอ)
 
 ---
 
@@ -205,9 +205,9 @@ SUM(downtime_hours)
 | Field | ใช้ใน |
 |-------|-------|
 | `status` | ทุก KPI |
-| `start_job` | MTTR, MTBF, Response Time, Daily Trend |
-| `end_job` | MTTR |
-| `approved_at` | Response Time |
+| `start_job` | MTBF, Response Time (เริ่มต้น), Daily Trend |
+| `approved_at` | MTTR (เริ่มต้น), Response Time (สิ้นสุด) |
+| `end_job` | MTTR (สิ้นสุด) |
 | `branch` | KPI แยกสาขา |
 | `department` | KPI แยกแผนก |
 | `machine_number` | Top Frequent Machines, MTBF |

@@ -179,7 +179,8 @@ function updateKPICards(data) {
     $('#responseTime').text(responseTime.toFixed(0));
     addTrendBadge('#responseTime', responseTime, comparison.response_time, true);
     
-    // OEE (Overall Equipment Effectiveness)
+    // OEE (Overall Equipment Effectiveness) — commented out, pending formula discussion
+    /*
     // OEE = Availability × Performance × Quality
     // Simplified: (Total Time - Downtime) / Total Time × Success Rate
     const totalTime = totalWorkHours + totalDowntimeHours;
@@ -188,11 +189,14 @@ function updateKPICards(data) {
     const oee = (availability * quality * 100).toFixed(1);
     $('#oeePercent').text(oee);
     addTrendBadge('#oeePercent', oee, comparison.oee);
+    */
     
-    // First Time Fix Rate
+    // First Time Fix Rate — card hidden (identical to Success Rate; requires repeat-visit tracking)
+    /*
     const firstTimeFixRate = parseFloat(summary.first_time_fix_rate) || 0;
     $('#firstTimeFixRate').text(firstTimeFixRate.toFixed(1));
     addTrendBadge('#firstTimeFixRate', firstTimeFixRate, comparison.first_time_fix_rate);
+    */
 }
 
 // อัปเดตกราฟทั้งหมด
@@ -1039,7 +1043,8 @@ function checkThresholdAlerts(data) {
         });
     }
     
-    // Check OEE
+    // Check OEE — commented out, pending formula discussion
+    /*
     const totalWorkHours = parseFloat(data.cost_stats.total_work_hours) || 0;
     const totalDowntimeHours = parseFloat(data.cost_stats.total_downtime_hours) || 0;
     const totalTime = totalWorkHours + totalDowntimeHours;
@@ -1053,6 +1058,7 @@ function checkThresholdAlerts(data) {
             message: `⚠️ OEE ต่ำกว่า ${thresholds.oee}% (ปัจจุบัน: ${oee.toFixed(1)}%) - ประสิทธิภาพต่ำ`
         });
     }
+    */
     
     // Check Response Time
     const responseTime = parseFloat(data.summary.avg_approval_minutes) || 0;

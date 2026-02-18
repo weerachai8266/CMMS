@@ -738,6 +738,7 @@ require_once '../config/config.php';
         
         <!-- KPI Cards Row 2 - Summary Stats -->
         <div class="row mb-4">
+            <!-- OEE card: commented out pending formula discussion
             <div class="col-md-2">
                 <div class="kpi-card warning">
                     <i class="fas fa-chart-pie kpi-icon"></i>
@@ -746,6 +747,7 @@ require_once '../config/config.php';
                     <div class="kpi-detail">%</div>
                 </div>
             </div>
+            -->
 
             <div class="col-md-2">
                 <div class="kpi-card purple">

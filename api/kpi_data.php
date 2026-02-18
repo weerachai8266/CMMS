@@ -77,7 +77,7 @@ try {
         COUNT(CASE WHEN status = 20 THEN 1 END) as in_progress_count,
         COUNT(CASE WHEN status = 30 THEN 1 END) as waiting_parts_count,
         COUNT(CASE WHEN status = 40 THEN 1 END) as completed_count,
-        AVG(TIMESTAMPDIFF(HOUR, start_job, end_job)) as avg_repair_hours,
+        AVG(TIMESTAMPDIFF(HOUR, approved_at, end_job)) as avg_repair_hours,
         AVG(TIMESTAMPDIFF(MINUTE, start_job, approved_at)) as avg_approval_minutes,
         (COUNT(CASE WHEN status = 40 THEN 1 END) * 100.0 / NULLIF(COUNT(*), 0)) as first_time_fix_rate
         FROM mt_repair
@@ -243,7 +243,7 @@ try {
         DATE_FORMAT(start_job, '%Y-%m') as month,
         COUNT(*) as total_repairs,
         COUNT(CASE WHEN status = 40 THEN 1 END) as completed_repairs,
-        AVG(TIMESTAMPDIFF(HOUR, start_job, end_job)) as avg_repair_hours,
+        AVG(TIMESTAMPDIFF(HOUR, approved_at, end_job)) as avg_repair_hours,
         SUM(CASE WHEN status = 40 THEN 1 ELSE 0 END) / COUNT(*) * 100 as completion_rate
         FROM mt_repair
         WHERE start_job >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
@@ -332,7 +332,7 @@ try {
     $sql_prev_summary = "SELECT 
         COUNT(*) as total_repairs,
         COUNT(CASE WHEN status = 40 THEN 1 END) as completed_count,
-        AVG(TIMESTAMPDIFF(HOUR, start_job, end_job)) as avg_repair_hours,
+        AVG(TIMESTAMPDIFF(HOUR, approved_at, end_job)) as avg_repair_hours,
         AVG(TIMESTAMPDIFF(MINUTE, start_job, approved_at)) as avg_approval_minutes,
         (COUNT(CASE WHEN status = 40 THEN 1 END) * 100.0 / NULLIF(COUNT(*), 0)) as success_rate,
         (COUNT(CASE WHEN status = 40 THEN 1 END) * 100.0 / NULLIF(COUNT(*), 0)) as first_time_fix_rate
