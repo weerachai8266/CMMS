@@ -19,6 +19,11 @@
     <style>
         html {
             font-size: 150%;
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        html::-webkit-scrollbar {
+            display: none;
         }
 
         * {
@@ -32,12 +37,9 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             overflow-x: hidden;
-
-            /* -- เพิ่ม 2 บรรทัดนี้เพื่อซ่อน Scrollbar สำหรับ Firefox, IE และ Edge -- */
-            -ms-overflow-style: none; 
+            -ms-overflow-style: none;
             scrollbar-width: none;
         }
-        /* -- เพิ่มบล็อกนี้ต่อท้ายลงไป เพื่อซ่อน Scrollbar สำหรับ Chromium (ตัวที่คุณใช้บน Pi) และ Chrome -- */
         body::-webkit-scrollbar {
             display: none;
         }
@@ -431,7 +433,7 @@
             box-shadow: 0 6px 24px rgba(255, 107, 53, 0.5);
             z-index: 9999;
             /* เวลาปรากฏของแบนเนอร์ */
-            animation: bannerPop 1.5s ease;
+            animation: bannerPop 0.1s ease;
             white-space: nowrap;
         }
         @keyframes bannerPop {

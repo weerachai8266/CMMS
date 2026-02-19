@@ -573,7 +573,7 @@ require_once '../config/config.php';
         </div>
         
         <!-- Key Metrics Section -->
-        <div class="row mb-4">
+        <!-- <div class="row mb-4">
             <div class="col-md-3">
                 <div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
                     <div class="card-body text-center py-4">
@@ -614,7 +614,7 @@ require_once '../config/config.php';
                     </div>
                 </div>
             </div>
-        </div>
+        </div> -->
 
         <!-- Filter Section -->
         <div class="filter-section">

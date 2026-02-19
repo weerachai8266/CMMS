@@ -25,6 +25,12 @@ function syncRepairToHistory($repairId, $conn) {
         if (!$repair) {
             return false;
         }
+
+        // ❌ ห้าม sync รายการที่ถูกยกเลิก (status = 50)
+        if ((int)$repair['status'] === STATUS_CANCELLED) {
+            error_log("syncRepairToHistory: skipped repair id={$repairId} (status=50 cancelled)");
+            return false;
+        }
         
         // ตรวจสอบว่ามี record นี้ใน history แล้วหรือยัง
         $checkSql = "SELECT id FROM mt_machine_history WHERE document_no = :doc_no";

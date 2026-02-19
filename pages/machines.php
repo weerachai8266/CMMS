@@ -56,11 +56,17 @@ require_once '../config/config.php';
                     <li class="nav-item">
                         <a class="nav-link" href="repair_form.php"><i class="fas fa-clipboard-list"></i> แจ้งซ่อม</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="approval.php"><i class="fas fa-clipboard-check"></i> อนุมัติใบแจ้งซ่อม</a>
+                    </li>
                     <li class="nav-item active">
                         <a class="nav-link" href="machines.php"><i class="fas fa-user-cog"></i> เจ้าหน้าที่ MT</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="monitor.php"><i class="fas fa-tv"></i> Monitor</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="kpi.php"><i class="fas fa-chart-line"></i> KPI</a>
                     </li>
                     <li class="nav-item">
                         <span class="nav-link text-light">

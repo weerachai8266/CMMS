@@ -59,7 +59,7 @@ try {
         body {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            padding: 20px;
+            /* padding: 20px; */
         }
         .approval-container {
             max-width: 1400px;
@@ -229,7 +229,37 @@ try {
     </style>
 </head>
 <body>
-    <div class="approval-container">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="../index.php"><i class="fas fa-tools"></i> ระบบแจ้งซ่อม</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ml-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../index.php"><i class="fas fa-home"></i> หน้าแรก</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="repair_form.php"><i class="fas fa-clipboard-list"></i> แจ้งซ่อม</a>
+                    </li>
+                    <li class="nav-item active">
+                        <a class="nav-link" href="approval.php"><i class="fas fa-clipboard-check"></i> อนุมัติใบแจ้งซ่อม</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="machines.php"><i class="fas fa-user-cog"></i> เจ้าหน้าที่ MT</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="monitor.php"><i class="fas fa-tv"></i> Monitor</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="kpi.php"><i class="fas fa-chart-line"></i> KPI</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <div class="approval-container mt-4">
         <!-- Header -->
         <div class="page-header">
             <div class="row align-items-center">
@@ -237,54 +267,58 @@ try {
                     <h2><i class="fas fa-clipboard-check"></i> อนุมัติใบแจ้งซ่อม</h2>
                     <p class="mb-0 text-muted">รายการรออนุมัติจากหัวหน้าแผนก</p>
                 </div>
-                <div class="col-md-4 text-right">
+                <!-- <div class="col-md-4 text-right">
                     <a href="../index.php" class="btn btn-secondary">
                         <i class="fas fa-arrow-left"></i> กลับหน้าหลัก
                     </a>
-                </div>
+                </div> -->
             </div>
         </div>
 
-        <!-- Filter Box -->
-        <div class="page-header">
-            <form method="GET" action="">
-                <div class="row">
-                    <div class="col-md-4">
-                        <label for="department"><i class="fas fa-building"></i> แผนก:</label>
-                        <select name="department" id="department" class="form-control">
-                            <option value="">ทั้งหมด</option>
-                            <?php foreach ($departments as $dept): ?>
-                                <option value="<?php echo htmlspecialchars($dept); ?>" <?php echo ($filter_department === $dept) ? 'selected' : ''; ?>>
-                                    <?php echo htmlspecialchars($dept); ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class="col-md-2">
-                        <label>&nbsp;</label>
-                        <button type="submit" class="btn btn-primary btn-block">
-                            <i class="fas fa-filter"></i> กรอง
-                        </button>
-                    </div>
-                    <div class="col-md-2">
-                        <label>&nbsp;</label>
-                        <a href="approval.php" class="btn btn-secondary btn-block">
-                            <i class="fas fa-redo"></i> ล้าง
-                        </a>
+        <div class="page-head">
+            <div class="row">    
+                <!-- Stats -->
+                <div class="col-md-4 d-flex">
+                    <div class="stats-card text-center h-100 w-100 d-flex flex-column justify-content-center">
+                        <div class="stat-number"><?php echo count($repairs); ?></div>
+                        <div class="text-muted">รายการรออนุมัติ</div>
                     </div>
                 </div>
-            </form>
-        </div>
-
-        <!-- Stats -->
-        <div class="row">
-            <div class="col-md-4">
-                <div class="stats-card text-center">
-                    <div class="stat-number"><?php echo count($repairs); ?></div>
-                    <div class="text-muted">รายการรออนุมัติ</div>
+                <!-- Filter Box -->
+                <div class="col-md-8 d-flex">
+                    <div class="stats-card h-100 w-100 d-flex flex-column justify-content-center">
+                        <form method="GET" action="">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <label for="department"><i class="fas fa-building"></i> แผนก:</label>
+                                    <select name="department" id="department" class="form-control">
+                                        <option value="">ทั้งหมด</option>
+                                        <?php foreach ($departments as $dept): ?>
+                                            <option value="<?php echo htmlspecialchars($dept); ?>" <?php echo ($filter_department === $dept) ? 'selected' : ''; ?>>
+                                                <?php echo htmlspecialchars($dept); ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <label>&nbsp;</label>
+                                    <button type="submit" class="btn btn-primary btn-block">
+                                        <i class="fas fa-filter"></i> กรอง
+                                    </button>
+                                </div>
+                                <div class="col-md-2">
+                                    <label>&nbsp;</label>
+                                    <a href="approval.php" class="btn btn-secondary btn-block">
+                                        <i class="fas fa-redo"></i> ล้าง
+                                    </a>
+                                </div>        
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
+        <br>
 
         <!-- Repair Cards -->
         <?php if (count($repairs) > 0): ?>

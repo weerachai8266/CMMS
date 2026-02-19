@@ -37,10 +37,16 @@
                     <a class="nav-link" href="repair_form.php"><i class="fas fa-clipboard-list"></i> แจ้งซ่อม</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="machines.php"><i class="fas fa-cogs"></i> เจ้าหน้าที่ MT</a>
+                    <a class="nav-link" href="approval.php"><i class="fas fa-clipboard-check"></i> อนุมัติใบแจ้งซ่อม</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="machines.php"><i class="fas fa-user-cog"></i> เจ้าหน้าที่ MT</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="monitor.php"><i class="fas fa-tv"></i> Monitor</a>
+                </li>
+                <li class="nav-item">
+                        <a class="nav-link" href="kpi.php"><i class="fas fa-chart-line"></i> KPI</a>
                 </li>
             </ul>
         </div>
@@ -132,13 +138,13 @@
                 <div class="form-group">
                     <label>ความเร่งด่วนของงาน <span class="text-danger">*</span></label>
                     <div class="form-row">
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <div class="custom-control custom-radio">
                                 <input type="radio" class="custom-control-input" id="priority_urgent" name="priority" value="urgent" checked>
                                 <label class="custom-control-label" for="priority_urgent">ด่วน</label>
                             </div>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <div class="custom-control custom-radio">
                                 <input type="radio" class="custom-control-input" id="priority_normal" name="priority" value="normal">
                                 <label class="custom-control-label" for="priority_normal">ปกติ</label>
