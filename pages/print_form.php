@@ -336,6 +336,56 @@ try {
         QWF-MT-01-0-01/01/2022
     </div>
 
+    <?php if (!empty($data['image_before']) || !empty($data['image_after'])): ?>
+    <!-- Photo Page -->
+    <div class="photo-page">
+        <div class="photo-page-header">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <img src="../img/logo.JPG" alt="Logo" style="width: 50px; height: 50px; object-fit: contain;">
+                <div>
+                    <div style="font-size: 13pt; font-weight: 700;">รูปภาพประกอบการซ่อม</div>
+                    <div style="font-size: 9pt; color: #555;">เลขที่: <?php echo htmlspecialchars($form_number); ?> &nbsp;|&nbsp; เครื่องจักร: <?php echo htmlspecialchars($data['machine_number'] ?? '-'); ?></div>
+                </div>
+            </div>
+        </div>
+        <div class="photo-grid">
+            <div class="photo-box">
+                <div class="photo-box-header before">
+                    <i class="fas fa-camera"></i> ก่อนซ่อม
+                </div>
+                <div class="photo-box-body">
+                    <?php if (!empty($data['image_before'])): ?>
+                        <img src="../<?php echo htmlspecialchars($data['image_before']); ?>" alt="ก่อนซ่อม">
+                    <?php else: ?>
+                        <div class="photo-placeholder">
+                            <i class="fas fa-image" style="font-size: 48px; color: #ccc;"></i>
+                            <div style="color: #aaa; margin-top: 8px; font-size: 10pt;">ไม่มีรูปภาพ</div>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+            <div class="photo-box">
+                <div class="photo-box-header after">
+                    <i class="fas fa-check-circle"></i> หลังซ่อม
+                </div>
+                <div class="photo-box-body">
+                    <?php if (!empty($data['image_after'])): ?>
+                        <img src="../<?php echo htmlspecialchars($data['image_after']); ?>" alt="หลังซ่อม">
+                    <?php else: ?>
+                        <div class="photo-placeholder">
+                            <i class="fas fa-image" style="font-size: 48px; color: #ccc;"></i>
+                            <div style="color: #aaa; margin-top: 8px; font-size: 10pt;">ไม่มีรูปภาพ</div>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+        <div style="text-align: right; font-size: 9pt; color: #555; margin-top: 8px;">
+            QWF-MT-01-0-01/01/2022
+        </div>
+    </div>
+    <?php endif; ?>
+
     <script>
         // ซ่อน placeholder ของ date/time inputs โดยใช้ CSS injection
         document.addEventListener('DOMContentLoaded', function() {

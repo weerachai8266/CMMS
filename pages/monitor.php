@@ -88,7 +88,7 @@
         .monitor-header .datetime {
             color: rgba(255, 255, 255, 0.9);
             text-align: center;
-            font-size: 1rem;
+            font-size: 1.5rem;
             margin-top: 5px;
         }
         
@@ -100,12 +100,15 @@
             width: 100%;
             background: white;
             border-radius: 15px;
-            overflow: hidden;
+            overflow-x: auto;
+            overflow-y: hidden;
+            -webkit-overflow-scrolling: touch;
             box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
         }
         
         .repair-table table {
             width: 100%;
+            min-width: 850px;
             margin: 0;
         }
         

@@ -50,7 +50,11 @@ function listItems($conn, $type) {
         return;
     }
     
-    $sql = "SELECT id, name, is_active, created_at, created_by, updated_at, updated_by FROM $table ORDER BY created_at DESC";
+    if ($type === 'department') {
+        $sql = "SELECT id, name, group_id, group_name, is_active, created_at, created_by, updated_at, updated_by FROM $table ORDER BY created_at DESC";
+    } else {
+        $sql = "SELECT id, name, is_active, created_at, created_by, updated_at, updated_by FROM $table ORDER BY created_at DESC";
+    }
     
     $stmt = $conn->prepare($sql);
     $stmt->execute();
@@ -96,6 +100,25 @@ function saveItem($conn, $type) {
     try {
         $conn->beginTransaction();
         
+        if ($type === 'department') {
+            $group_id = intval($_POST['group_id'] ?? 0);
+            $group_name = trim($_POST['group_name'] ?? '');
+            if ($id > 0) {
+                $sql = "UPDATE $table SET name = :name, group_id = :group_id, group_name = :group_name, updated_by = :updated_by, updated_at = NOW() WHERE id = :id";
+                $params = [':id' => $id, ':name' => $name, ':group_id' => $group_id ?: null, ':group_name' => $group_name ?: null, ':updated_by' => $current_user];
+                $stmt = $conn->prepare($sql);
+                $stmt->execute($params);
+                $conn->commit();
+                json_response(true, 'อัปเดตข้อมูลสำเร็จ');
+            } else {
+                $sql = "INSERT INTO $table (name, group_id, group_name, created_by) VALUES (:name, :group_id, :group_name, :created_by)";
+                $params = [':name' => $name, ':group_id' => $group_id ?: null, ':group_name' => $group_name ?: null, ':created_by' => $current_user];
+                $stmt = $conn->prepare($sql);
+                $stmt->execute($params);
+                $conn->commit();
+                json_response(true, 'เพิ่มข้อมูลสำเร็จ', ['id' => $conn->lastInsertId()]);
+            }
+        } else {
         if ($id > 0) {
             // Update
             $sql = "UPDATE $table SET name = :name, updated_by = :updated_by, updated_at = NOW() WHERE id = :id";
@@ -117,6 +140,7 @@ function saveItem($conn, $type) {
             
             $conn->commit();
             json_response(true, 'เพิ่มข้อมูลสำเร็จ', ['id' => $conn->lastInsertId()]);
+        }
         }
         
     } catch (PDOException $e) {

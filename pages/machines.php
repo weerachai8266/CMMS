@@ -402,6 +402,7 @@ require_once '../config/config.php';
                                     <tr>
                                         <th width="80">ID</th>
                                         <th>ชื่อหน่วยงาน</th>
+                                        <th>กลุ่ม</th>
                                         <th width="120">สร้างโดย</th>
                                         <th width="120">แก้ไขโดย</th>
                                         <th width="100">สถานะ</th>
@@ -409,7 +410,7 @@ require_once '../config/config.php';
                                     </tr>
                                 </thead>
                                 <tbody id="departmentTableBody">
-                                    <tr><td colspan="6" class="text-center"><i class="fas fa-spinner fa-spin"></i> กำลังโหลด...</td></tr>
+                                    <tr><td colspan="7" class="text-center"><i class="fas fa-spinner fa-spin"></i> กำลังโหลด...</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -809,6 +810,22 @@ require_once '../config/config.php';
                         <div class="form-group">
                             <label>ชื่อ <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="master_name" name="name" required placeholder="กรอกชื่อ...">
+                        </div>
+                        <div id="group_name_field" style="display: none;">
+                            <div class="form-row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>รหัสกลุ่ม</label>
+                                        <input type="number" class="form-control" id="master_group_id" name="group_id" placeholder="เช่น 1, 2, 3..." min="1">
+                                    </div>
+                                </div>
+                                <div class="col-md-8">
+                                    <div class="form-group">
+                                        <label>ชื่อกลุ่ม</label>
+                                        <input type="text" class="form-control" id="master_group_name" name="group_name" placeholder="กรอกชื่อกลุ่ม...">
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -1398,9 +1415,10 @@ require_once '../config/config.php';
         function displayMasterData(type, data) {
             const tbody = $('#' + type + 'TableBody');
             let html = '';
+            const colspan = (type === 'department') ? 7 : 6;
             
             if (data.length === 0) {
-                tbody.html('<tr><td colspan="6" class="text-center">ไม่มีข้อมูล</td></tr>');
+                tbody.html('<tr><td colspan="' + colspan + '" class="text-center">ไม่มีข้อมูล</td></tr>');
                 return;
             }
             
@@ -1412,6 +1430,9 @@ require_once '../config/config.php';
                 html += '<tr>';
                 html += '<td class="text-center">' + item.id + '</td>';
                 html += '<td>' + (item.name || '-') + '</td>';
+                if (type === 'department') {
+                    html += '<td>' + (item.group_id ? item.group_id + (item.group_name ? ' - ' + item.group_name : '') : (item.group_name || '-')) + '</td>';
+                }
                 html += '<td class="text-center"><small>' + (item.created_by || '-') + '</small></td>';
                 html += '<td class="text-center"><small>' + (item.updated_by || '-') + '</small></td>';
                 html += '<td class="text-center">' + statusBadge + '</td>';
@@ -1431,6 +1452,14 @@ require_once '../config/config.php';
             $('#master_type').val(type);
             $('#master_id').val('');
             $('#masterForm')[0].reset();
+            
+            if (type === 'department') {
+                $('#group_name_field').show();
+            } else {
+                $('#group_name_field').hide();
+                $('#master_group_id').val('');
+                $('#master_group_name').val('');
+            }
             
             let title = '';
             if (type === 'company') {
@@ -1461,6 +1490,15 @@ require_once '../config/config.php';
                         $('#master_type').val(type);
                         $('#master_id').val(item.id);
                         $('#master_name').val(item.name);
+                        
+                        if (type === 'department') {
+                            $('#master_group_id').val(item.group_id || '');
+                            $('#master_group_name').val(item.group_name || '');
+                            $('#group_name_field').show();
+                        } else {
+                            $('#master_group_name').val('');
+                            $('#group_name_field').hide();
+                        }
                         
                         let title = '';
                         if (type === 'company') {

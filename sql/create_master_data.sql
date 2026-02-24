@@ -36,6 +36,8 @@ CREATE TABLE IF NOT EXISTS mt_divisions (
 CREATE TABLE IF NOT EXISTS mt_departments (
     id INT(11) AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL COMMENT 'ชื่อหน่วยงาน',
+    group_id INT NULL COMMENT 'รหัสกลุ่ม',
+    group_name VARCHAR(255) NULL COMMENT 'ชื่อกลุ่ม',
     is_active TINYINT(1) DEFAULT 1 COMMENT '1=ใช้งาน, 0=ไม่ใช้งาน',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

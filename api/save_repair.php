@@ -67,6 +67,30 @@ if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
 }
 
 try {
+    // Lookup IDs จาก master tables ตามชื่อที่ส่งมา
+    $division_id = null;
+    $department_id = null;
+    $department_group_id = null;
+    $branch_id = null;
+
+    $r = $conn->prepare("SELECT id FROM mt_divisions WHERE name = :name LIMIT 1");
+    $r->execute([':name' => $division]);
+    $row = $r->fetch(PDO::FETCH_ASSOC);
+    if ($row) $division_id = (int)$row['id'];
+
+    $r = $conn->prepare("SELECT id, group_id FROM mt_departments WHERE name = :name LIMIT 1");
+    $r->execute([':name' => $department]);
+    $row = $r->fetch(PDO::FETCH_ASSOC);
+    if ($row) {
+        $department_id = (int)$row['id'];
+        $department_group_id = $row['group_id'] ? (int)$row['group_id'] : null;
+    }
+
+    $r = $conn->prepare("SELECT id FROM mt_branches WHERE name = :name LIMIT 1");
+    $r->execute([':name' => $branch]);
+    $row = $r->fetch(PDO::FETCH_ASSOC);
+    if ($row) $branch_id = (int)$row['id'];
+
     // สร้างเลขที่เอกสาร รูปแบบ: ACP001/68 (สาขา + เลข 3 หลัก + / + ปี 2 หลัก)
     $thai_year = date('Y') + 543; // แปลงเป็น พ.ศ.
     $year_2digit = substr($thai_year, -2); // เอาแค่ 2 หลักท้าย (2568 -> 68)
@@ -85,17 +109,21 @@ try {
     $document_no = $branch . $running_number . '/' . $year_2digit;
     
     // Use prepared statement to prevent SQL injection
-    $sql = "INSERT INTO mt_repair (division, department, branch, document_no, machine_number, issue, 
+    $sql = "INSERT INTO mt_repair (division, division_id, department, department_id, department_group_id, branch, branch_id, document_no, machine_number, issue, 
             action_type, action_other_text, priority,
             image_before, image_after, reported_by, handled_by, mt_report, status) 
-            VALUES (:division, :department, :branch, :document_no, :machine_number, :issue, 
+            VALUES (:division, :division_id, :department, :department_id, :department_group_id, :branch, :branch_id, :document_no, :machine_number, :issue, 
             :action_type, :action_other_text, :priority,
             :image_before, :image_after, :reported_by, :handled_by, :mt_report, :status)";
     
     $stmt = $conn->prepare($sql);
     $stmt->bindParam(':division', $division);
+    $stmt->bindParam(':division_id', $division_id, PDO::PARAM_INT);
     $stmt->bindParam(':department', $department);
+    $stmt->bindParam(':department_id', $department_id, PDO::PARAM_INT);
+    $stmt->bindParam(':department_group_id', $department_group_id, PDO::PARAM_INT);
     $stmt->bindParam(':branch', $branch);
+    $stmt->bindParam(':branch_id', $branch_id, PDO::PARAM_INT);
     $stmt->bindParam(':document_no', $document_no);
     $stmt->bindParam(':machine_number', $machine_number);
     $stmt->bindParam(':issue', $issue);
