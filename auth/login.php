@@ -20,8 +20,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             // ดึงข้อมูล user จากฐานข้อมูล
             $stmt = $conn->prepare("
-                SELECT id, username, password, full_name, role, email, 
-                       employee_id, department, branch, position, is_active,
+                SELECT id, username, password, full_name, role, email,
+                       employee_id, department_id, branch_id, is_active,
                        login_attempts, locked_until
                 FROM mt_users 
                 WHERE username = :username
@@ -47,8 +47,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $_SESSION['user_full_name'] = $user['full_name'];
                     $_SESSION['user_role'] = $user['role'];
                     $_SESSION['user_email'] = $user['email'];
-                    $_SESSION['user_department'] = $user['department'];
-                    $_SESSION['user_branch'] = $user['branch'];
+                    $_SESSION['user_department_id'] = $user['department_id'];
+                    $_SESSION['user_branch_id'] = $user['branch_id'];
                     $_SESSION['login_time'] = time();
                     
                     // รีเซ็ต login attempts และอัปเดต last_login

@@ -11,16 +11,16 @@
 set_time_limit(300);
 
 // เข้าได้เฉพาะ internal network
-$clientIP = $_SERVER['REMOTE_ADDR'] ?? '';
-if (!str_starts_with($clientIP, '192.168.') && $clientIP !== '127.0.0.1') {
-    http_response_code(403);
-    die('Access denied');
-}
+// $clientIP = $_SERVER['REMOTE_ADDR'] ?? '';
+// if (!str_starts_with($clientIP, '192.168.') && $clientIP !== '127.0.0.1') {
+//     http_response_code(403);
+//     die('Access denied');
+// }
 
 require_once __DIR__ . '/../config/config.php';
 
 // ---- Config ----
-$BASE_URL   = 'http://192.168.0.44/mt/';
+$BASE_URL   = 'http://127.0.0.1/mt/';
 $TARGET_URL = $BASE_URL . 'api/monitor_data.php';
 $STEPS      = [1, 5, 10, 20, 50, 100, 150, 200, 300, 500, 750, 1000];
 $REPEAT     = 3;    // รอบต่อ step

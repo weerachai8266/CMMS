@@ -7,12 +7,12 @@
  */
 
 // ป้องกันการเข้าถึงจากภายนอก (ใช้ได้เฉพาะใน local network)
-$allowedCIDR = '192.168.';
-$clientIP    = $_SERVER['REMOTE_ADDR'] ?? '';
-if (!str_starts_with($clientIP, $allowedCIDR) && $clientIP !== '127.0.0.1') {
-    http_response_code(403);
-    die('Access denied: Test runner is only available on internal network.');
-}
+// $allowedCIDR = '192.168.';
+// $clientIP    = $_SERVER['REMOTE_ADDR'] ?? '';
+// if (!str_starts_with($clientIP, $allowedCIDR) && $clientIP !== '127.0.0.1') {
+//     http_response_code(403);
+//     die('Access denied: Test runner is only available on internal network.');
+// }
 
 // ---- โหลด dependencies ----
 require_once __DIR__ . '/../config/config.php';
@@ -25,8 +25,8 @@ require_once __DIR__ . '/Performance/LoadTest.php';
 // ---- Configuration ----
 $loadUsers = max(1, min(500, (int)($_GET['load_users'] ?? 50)));
 $cfg = [
-    'base_url'   => 'http://192.168.0.44/mt/',
-    'db_host'    => '192.168.0.44',
+    'base_url'   => 'http://127.0.0.1/mt/',
+    'db_host'    => '127.0.0.1',
     'db_name'    => 'maintenance',
     'db_user'    => 'webapp_mt',
     'db_pass'    => 'user',
